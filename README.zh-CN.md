@@ -362,20 +362,6 @@ final closeout 前，agent 必须判断当前目标类型：
 - Markdown 表格中包含 `|` 的正则是否已转义
 - 新规则是否有人工判断点或候选自动检查
 
-## GitHub Description 怎么写
-
-短描述：
-
-```text
-Portable workflow gates for AI coding agents: requirements, design, implementation, verification, and delivery.
-```
-
-建议 topics：
-
-```text
-ai-agents, coding-agents, codex, claude-code, developer-tools, workflow, software-engineering, agents-md
-```
-
 ## License
 
 MIT. See [LICENSE](LICENSE).

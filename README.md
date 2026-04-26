@@ -362,20 +362,6 @@ When maintaining the harness, check that:
 - regex values containing `|` are escaped in Markdown tables
 - new rules have either a human judgment point or a candidate automated check
 
-## What To Put In Your GitHub Description
-
-Short description:
-
-```text
-Portable workflow gates for AI coding agents: requirements, design, implementation, verification, and delivery.
-```
-
-Suggested topics:
-
-```text
-ai-agents, coding-agents, codex, claude-code, developer-tools, workflow, software-engineering, agents-md
-```
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
