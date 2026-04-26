@@ -259,6 +259,109 @@ npm run harness:test
 
 The process check is not a business test. It only proves that the harness-visible process files pass the checks currently implemented.
 
+## Execution Model
+
+AgentHarness defaults to autopilot execution:
+
+1. If there is no real blocker, the agent continues from requirement and design through implementation, verification, and delivery.
+2. Requirement and Design gates must happen before implementation. They are records, not approval pauses.
+3. Long-running or multi-stage work must create phase-level todos, a checklist, and an execution order before implementation.
+4. Finishing one work package is not a final closeout. The agent should continue to the next actionable item.
+5. "Continue", "start", and "keep going" mean continuing the active phase by default.
+6. A final closeout is allowed only when the current target is complete or a real blocker appears.
+7. Durable decisions can be written to `docs/development/changes/`, but only at phase closeout, after high-risk work is complete, or when the user explicitly asks for it.
+8. External skills or planning tools should not inflate the workflow. Collapse their output into the harness gates and continue unless there is a real blocker.
+
+Real blockers are limited to:
+
+- a command needs user authorization
+- continuing would overwrite or damage existing work
+- the requirement has changed enough that continuing would clearly miss the goal
+- key input is missing and cannot be inferred from the repository
+
+## Closeout Rules
+
+Before a final closeout, the agent must decide which target type it is handling:
+
+- `single-task`: a bounded task; close only after the requested result and necessary verification are complete.
+- `staged/ongoing`: long-running remediation, migration, or multi-stage work; close only when the current phase has no actionable remaining item, or a real blocker appears.
+- `continuation`: the user says "continue", "start", "keep going", or similar; inherit the active phase and continue the next item.
+- `explicit-closeout`: the user asks to summarize, stop, or close; report the current verified state.
+
+If an active operations board or checklist exists under `docs/operations/<initiative>/`, the agent must read it before final closeout and confirm that the highest-priority actionable item has been advanced.
+
+## Long-Running Remediation Workflow
+
+Use this workflow for repository restructures, workspace changes, package renames, application entrypoint renames, migrations, and multi-stage remediation.
+
+Before implementation:
+
+1. Create or reuse `docs/operations/<initiative>/`.
+2. Write the phase-level todo/checklist, execution order, non-goals, and first work package.
+3. Update the board so the current highest-priority work package is explicit.
+
+Each work package should record:
+
+- `ID`
+- goal
+- scope
+- risk
+- verification method
+- completion standard
+- dependency
+- status
+
+When a package finishes:
+
+1. Update the board.
+2. Update the verification matrix.
+3. Record decisions, deferrals, or reopen conditions if they changed.
+4. Continue to the next item unless the phase is complete or blocked.
+
+## Responsibility Split
+
+Keep rules in the narrowest stable place:
+
+- `AGENTS.md`: repo-level hard constraints, trigger rules, red lines, and navigation.
+- `README.md`: general execution model, task sizing, and long-running workflow.
+- `templates/`: minimal analysis fields for each task type.
+- `gates/`: stage closeout fields, examples, and anti-patterns.
+- `rules/`: portable implementation and verification rules.
+- `automation/`: generic process checks.
+- `project/`: repository facts, business chains, high-risk paths, and replaceable adapter content.
+
+## Lean Execution Defaults
+
+Default command and context usage should stay small:
+
+1. Search only the target paths and exclude generated output such as `target/`, `node_modules/`, and `dist/`.
+2. Check `git status` only for paths relevant to the current task when possible.
+3. Read files by locating first, then opening a small window.
+4. Truncate long outputs and keep only decision-relevant lines.
+5. Prefer changed-file process checks over full lint/test runs unless the conclusion depends on a broader check.
+6. If a broad check is necessary, state the reason and scope in Verification gate.
+
+Details live in [rules/token-efficiency.md](rules/token-efficiency.md).
+
+## Quick Navigation
+
+- Task routing: [templates/](templates/)
+- Stage gates: [gates/](gates/)
+- Portable rules: [rules/](rules/)
+- Automation: [automation/](automation/)
+- Project adapter: [project/](project/)
+- Adapter profiles: [project/profiles/](project/profiles/)
+
+## Maintenance Rule
+
+When maintaining the harness, check that:
+
+- template triggers, gate order, and README defaults agree
+- repository-specific facts stay in `project/` or project-specific rules
+- automation mapping tables render correctly
+- regex values containing `|` are escaped in Markdown tables
+- new rules have either a human judgment point or a candidate automated check
+
 ## What To Put In Your GitHub Description
 
 Short description:

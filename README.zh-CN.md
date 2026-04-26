@@ -259,6 +259,109 @@ npm run harness:test
 
 流程检查不是业务测试。它只证明 harness 可见的流程文件通过了当前已实现的检查。
 
+## 执行模型
+
+AgentHarness 默认按 autopilot 执行：
+
+1. 没有真实阻塞时，agent 从需求和设计继续推进到实现、验证和交付。
+2. Requirement 和 Design gate 必须在实现前输出。它们是过程记录，不是审批暂停点。
+3. 长周期或多阶段任务必须在实现前创建阶段级 todo、checklist 和执行顺序。
+4. 完成一个工作包不等于 final closeout。agent 应继续推进下一个可执行事项。
+5. “继续”、“开始”、“接着做”默认表示继续当前活动阶段。
+6. 只有当前目标完成或出现真实阻塞时，才允许 final closeout。
+7. 持久化决策可以写入 `docs/development/changes/`，但只应在阶段收口、高风险工作完成后，或用户明确要求时写入。
+8. 外部技能或计划工具不应放大流程输出；将它们的结果折叠进 harness gate，除非有真实阻塞，否则继续推进。
+
+真实阻塞只包括：
+
+- 命令需要用户授权
+- 继续执行会覆盖或破坏已有工作
+- 需求变化导致继续执行会明显偏离目标
+- 缺少关键输入，且无法从仓库自行判断
+
+## 收口规则
+
+final closeout 前，agent 必须判断当前目标类型：
+
+- `single-task`：有边界的任务；只有请求结果和必要验证完成后才能收口。
+- `staged/ongoing`：长周期整改、迁移或多阶段工作；只有当前阶段没有可执行剩余项，或出现真实阻塞时才能收口。
+- `continuation`：用户说“继续”、“开始”、“接着做”等；继承当前活动阶段并继续下一项。
+- `explicit-closeout`：用户要求总结、停止或收口；报告当前已验证状态。
+
+如果 `docs/operations/<initiative>/` 下存在活动执行板或 checklist，agent 必须在 final closeout 前读取它，并确认最高优先级可执行项已经推进。
+
+## 长周期整改工作流
+
+仓库结构调整、workspace 改动、包重命名、应用入口重命名、迁移和多阶段整改，都使用这个工作流。
+
+实现前：
+
+1. 创建或复用 `docs/operations/<initiative>/`。
+2. 写清阶段级 todo/checklist、执行顺序、非目标和第一个工作包。
+3. 更新执行板，明确当前最高优先级工作包。
+
+每个工作包应记录：
+
+- `ID`
+- 目标
+- 范围
+- 风险
+- 验证方式
+- 完成标准
+- 前置依赖
+- 状态
+
+工作包完成后：
+
+1. 更新执行板。
+2. 更新验证矩阵。
+3. 如果决策、暂缓项或重开条件变化，同步记录。
+4. 除非阶段完成或出现阻塞，否则继续推进下一项。
+
+## 职责分层
+
+规则应放在最窄且稳定的位置：
+
+- `AGENTS.md`：仓库级硬约束、触发规则、红线和导航。
+- `README.md`：通用执行模型、任务尺寸和长周期工作流。
+- `templates/`：每类任务的最小分析字段。
+- `gates/`：阶段收口字段、示例和反例。
+- `rules/`：可移植的实现和验证规则。
+- `automation/`：通用流程检查。
+- `project/`：仓库事实、业务链路、高风险路径和可替换的 adapter 内容。
+
+## 精简执行默认值
+
+默认命令和上下文使用应保持小范围：
+
+1. 只搜索目标路径，并排除 `target/`、`node_modules/`、`dist/` 等生成输出。
+2. 尽量只对当前任务相关路径运行 `git status`。
+3. 先定位再读取文件窗口，不整段通读大文件。
+4. 截断长输出，只保留决策所需内容。
+5. 优先使用 changed-file 流程检查；只有结论依赖更大范围检查时，才运行全量 lint/test。
+6. 如果必须运行大范围检查，在 Verification gate 说明原因和范围。
+
+详情见 [rules/token-efficiency.md](rules/token-efficiency.md)。
+
+## 快速导航
+
+- 任务分流：[templates/](templates/)
+- 阶段 gate：[gates/](gates/)
+- 可移植规则：[rules/](rules/)
+- 自动化：[automation/](automation/)
+- 项目适配：[project/](project/)
+- 适配配置：[project/profiles/](project/profiles/)
+
+## 维护规则
+
+维护 harness 时，需要检查：
+
+- 模板触发、gate 顺序和 README 默认流程是否一致
+- 仓库专属事实是否留在 `project/` 或项目专属 rules 中
+- 自动化映射表格是否能正常渲染
+- Markdown 表格中包含 `|` 的正则是否已转义
+- 新规则是否有人工判断点或候选自动检查
+
 ## GitHub Description 怎么写
 
 短描述：
