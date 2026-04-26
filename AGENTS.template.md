@@ -51,6 +51,8 @@
 
 需要规划可自动检查项时，再看 `harness/process/automation/`。
 
+测试失败时，必须先读取并执行 `harness/process/rules/test-failure-triage.md`，判定是实现回归、测试契约过期、需求变化未同步测试，还是环境 / fixture 问题；禁止只为测试变绿而回退用户明确保留的 UI、行为或架构。
+
 ## Autopilot Defaults
 
 默认按自动 agent 执行。gate 是过程记录，不是确认点；无阻塞时输出 gate 后必须继续到实现、验证和交付。
@@ -112,6 +114,8 @@
 - 是否只剩真实阻塞（权限 / 环境 / 缺关键输入）而非可继续执行项
 
 任一项不满足时，必须继续执行并仅输出 `working update`。
+
+测试还要修、测试契约还没同步、还有明确可跑验证命令，都属于可执行项，不允许作为“剩余风险”后直接收口。
 
 ## External Skills And Gates
 

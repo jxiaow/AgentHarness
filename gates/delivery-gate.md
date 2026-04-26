@@ -30,6 +30,19 @@
 
 如果仍有可执行下一项，优先继续执行，不输出 Delivery gate。
 
+## Executable Risk Is Not Closeout Risk
+
+以下内容不是“剩余风险”，而是必须继续处理的可执行待办：
+
+- 测试失败还没有分流或修复
+- 测试契约尚未同步当前需求或当前 UI
+- 还有明确可跑的验证命令
+- 已知代码问题有明确修复面且不需要新授权
+
+这类事项存在时，禁止输出 `final closeout`。继续执行下一步，或在权限、环境、关键输入缺失时说明真实阻塞。
+
+测试失败收口前必须按 `../rules/test-failure-triage.md` 判定失败类型，不能把“测试还要修”包装成风险后停下。
+
 ## Evidence Anchors
 
 `final closeout` 默认应包含：

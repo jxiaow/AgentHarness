@@ -7,9 +7,11 @@
 ## Current Rules
 
 - `token-efficiency.md`
+- `test-failure-triage.md`
 
 ## Quick Selection
 
 - 低 token 执行与最小化命令范围：`token-efficiency.md`
+- 测试失败分流、测试契约过期、避免为绿灯回退目标实现：`test-failure-triage.md`
 
 项目规则按 adapter 选择。生成 adapter 后入口通常是 `../project/local/rules/`。
