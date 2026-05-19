@@ -15,7 +15,7 @@ Classify rules in the development process harness by "degree of automation feasi
 
 ## Current Mapping
 
-`Process` rows belong to harness core and migrate with `harness/core/` by default. Project entry, interface contract, style, and build rules belong to the project adapter; replace these rows and corresponding scripts when migrating to another repo.
+`Process` rows belong to harness core and travel with the `harness/core/` submodule. Project entry, interface contract, style, and build rules belong to the project adapter in `harness/project/`; configure these via `entry-checks.json` and project-specific scripts.
 
 | Rule Area     | Example Rule                                    | Type              | Notes                                                        |
 | ------------- | ----------------------------------------------- | ----------------- | ------------------------------------------------------------ |

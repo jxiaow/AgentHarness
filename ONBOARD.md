@@ -116,5 +116,5 @@ Copy the content of `harness/core/AGENTS.template.md` to the repository root as 
 
 - Only write facts that already exist in the repository
 - Rules should only describe patterns that are already stable, not one-off temporary conventions
-- Do not modify generic rule files with `_` prefix
+- Do not modify generic rule files in `harness/core/rules/`
 - When uncertain, write less rather than guess

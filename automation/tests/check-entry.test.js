@@ -245,4 +245,50 @@ describe('check-entry script', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('Failed to parse entry-checks config');
   });
+
+  it('exits with error when config has no rules array', () => {
+    writeFixture('harness/project/entry-checks.json', '{"rules": "not-an-array"}');
+    writeFixture('src/views/Foo.vue', '<template></template>');
+
+    const result = runCheck('--files', 'src/views/Foo.vue');
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('Missing or invalid "rules" field');
+  });
+
+  it('exits with error when a rule is missing filePattern', () => {
+    writeConfig({
+      rules: [{ name: 'bad-rule' }],
+    });
+    writeFixture('src/views/Foo.vue', '<template></template>');
+
+    const result = runCheck('--files', 'src/views/Foo.vue');
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('bad-rule');
+    expect(result.stderr).toContain('filePattern');
+  });
+
+  it('creates a config template with --init', () => {
+    const result = runCheck('--init');
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('Created entry-checks config');
+
+    const configPath = path.join(tempDir, 'harness/project/entry-checks.json');
+    expect(fs.existsSync(configPath)).toBe(true);
+
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    expect(Array.isArray(config.rules)).toBe(true);
+    expect(config.rules[0].name).toBe('example-view-entry');
+  });
+
+  it('does not overwrite existing config with --init', () => {
+    writeConfig({ rules: [] });
+
+    const result = runCheck('--init');
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('already exists');
+  });
 });

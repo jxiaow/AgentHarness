@@ -512,6 +512,7 @@ This change explains why an execution board can prevent early closeout.
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('--changed');
     expect(result.stdout).toContain('--staged');
+    expect(result.stdout).toContain('Default scan scope');
   });
 
   it('checks delivery gate continuation constraints in core-local path', () => {

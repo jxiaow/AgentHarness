@@ -44,13 +44,42 @@ function loadConfig(configPath) {
   }
 
   const content = fs.readFileSync(configPath, 'utf8');
+  let config;
   try {
-    return JSON.parse(content);
+    config = JSON.parse(content);
   } catch (error) {
     console.error(`Failed to parse entry-checks config: ${configPath}`);
     console.error(`  ${error.message}`);
     process.exit(1);
   }
+
+  if (!config || typeof config !== 'object') {
+    console.error(`Invalid entry-checks config: ${configPath}`);
+    console.error('  Config must be a JSON object with a "rules" array.');
+    process.exit(1);
+  }
+
+  if (!Array.isArray(config.rules)) {
+    console.error(`Invalid entry-checks config: ${configPath}`);
+    console.error('  Missing or invalid "rules" field (must be an array).');
+    process.exit(1);
+  }
+
+  for (let i = 0; i < config.rules.length; i += 1) {
+    const rule = config.rules[i];
+    if (!rule.name || typeof rule.name !== 'string') {
+      console.error(`Invalid entry-checks config: ${configPath}`);
+      console.error(`  rules[${i}]: missing or invalid "name" field.`);
+      process.exit(1);
+    }
+    if (!rule.filePattern || typeof rule.filePattern !== 'string') {
+      console.error(`Invalid entry-checks config: ${configPath}`);
+      console.error(`  rules[${i}] (${rule.name}): missing or invalid "filePattern" field.`);
+      process.exit(1);
+    }
+  }
+
+  return config;
 }
 
 function resolveConfigPath(argv, baseDir) {
@@ -282,6 +311,7 @@ function printUsage() {
   );
   console.log('Usage: node harness/core/automation/check-entry.js --changed');
   console.log('Usage: node harness/core/automation/check-entry.js --staged');
+  console.log('Usage: node harness/core/automation/check-entry.js --init');
   console.log('Option: --config <path> specify entry-checks config file');
   console.log('Option: --max-issues <n> limit issue output count, default 5');
   console.log('Option: --summary only output counts aggregated by rule');
@@ -344,9 +374,42 @@ function run(argv, options = {}) {
   return { files, issues, noConfig: false };
 }
 
+function initConfig(baseDir) {
+  const targetDir = path.resolve(baseDir, 'harness/project');
+  const targetPath = path.join(targetDir, 'entry-checks.json');
+
+  if (fs.existsSync(targetPath)) {
+    console.log(`Config already exists: ${path.relative(baseDir, targetPath)}`);
+    return;
+  }
+
+  const template = {
+    rules: [
+      {
+        name: 'example-view-entry',
+        filePattern: '^src/views/.+\\.vue$',
+        nameExtractor: '/([^/]+)\\.vue$',
+        registryFile: 'src/router/index.js',
+        registryPatterns: ['${name}', 'views/${name}.vue'],
+        message: 'New view ${name} must be registered in src/router/index.js',
+      },
+    ],
+  };
+
+  fs.mkdirSync(targetDir, { recursive: true });
+  fs.writeFileSync(targetPath, `${JSON.stringify(template, null, 2)}\n`, 'utf8');
+  console.log(`Created entry-checks config: ${path.relative(baseDir, targetPath)}`);
+  console.log('Edit the rules array to match your project structure.');
+}
+
 function main() {
   if (process.argv.includes('--help') || process.argv.includes('-h')) {
     printUsage();
+    process.exit(0);
+  }
+
+  if (process.argv.includes('--init')) {
+    initConfig(process.cwd());
     process.exit(0);
   }
 
@@ -400,6 +463,7 @@ module.exports = {
   isEntryCheckCandidate,
   loadConfig,
   resolveConfigPath,
+  initConfig,
   parseMaxIssues,
   parseReportPath,
   hasSummary,

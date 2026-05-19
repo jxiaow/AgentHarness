@@ -124,11 +124,16 @@ function main() {
     [layout.entryScript, entryArgs],
   ];
 
+  let hasFailure = false;
   for (const [script, args] of checks) {
     const status = runNodeScript(layout.rootDir, script, args);
     if (status !== 0) {
-      process.exit(status);
+      hasFailure = true;
     }
+  }
+
+  if (hasFailure) {
+    process.exit(1);
   }
 
   console.log('harness checks passed');

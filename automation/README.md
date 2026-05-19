@@ -32,6 +32,12 @@ node harness/core/automation/check-process.js
 
 Entry checks are project-specific and driven by a JSON config file. Place your config at `harness/project/entry-checks.json` or pass `--config <path>`.
 
+To generate a starter config:
+
+```bash
+node harness/core/automation/check-entry.js --init
+```
+
 Each rule defines:
 
 - `name` — rule identifier

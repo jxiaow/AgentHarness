@@ -371,6 +371,10 @@ function printUsage() {
   console.log(
     'Example: node harness/core/automation/check-process.js AGENTS.md harness/core docs'
   );
+  console.log('');
+  console.log('Default scan scope (no args): AGENTS.md, harness/core/, harness/project/, docs/');
+  console.log('--changed scans all .md files in the working tree diff (including untracked)');
+  console.log('--staged scans only .md files in the staged diff');
 }
 
 function parseMaxIssues(argv) {
