@@ -552,6 +552,8 @@ Close gate
 
 Scope gate
 - Goal: fix bug
+- Approach: change one line in auth module
+- Verification: build pass
 
 Close gate
 - Result: completed

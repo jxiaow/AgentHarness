@@ -384,6 +384,54 @@ function checkProfilePathReferences(relativePath, content, baseDir) {
   return issues;
 }
 
+function checkScopeGateQuality(relativePath, content) {
+  // Skip template/doc/example files
+  const normalized = normalizePath(relativePath);
+  if (
+    normalized.startsWith('gates/') ||
+    normalized.startsWith('harness/core/gates/') ||
+    normalized.startsWith('templates/') ||
+    normalized.startsWith('harness/core/templates/') ||
+    normalized.startsWith('docs/') ||
+    normalized.startsWith('harness/core/docs/') ||
+    normalized.startsWith('examples/') ||
+    normalized.startsWith('harness/core/examples/') ||
+    normalized.endsWith('AGENTS.template.md') ||
+    normalized.endsWith('AGENTS.md') ||
+    normalized.endsWith('README.md') ||
+    normalized.endsWith('README.zh-CN.md')
+  ) {
+    return [];
+  }
+
+  // Match Scope gate at start of line
+  if (!/^\s*Scope\s+gate\s*$/im.test(content)) {
+    return [];
+  }
+
+  // Extract the Scope gate section (from "Scope gate" to the next gate or heading)
+  const scopeMatch = content.match(/^\s*Scope\s+gate\s*\r?\n([\s\S]*?)(?=^\s*(?:Plan|Build|Close|Git)\s+gate|^#|\Z)/im);
+  if (!scopeMatch) {
+    return [];
+  }
+
+  const scopeContent = scopeMatch[1];
+  // Count distinct field lines (lines starting with "- " that contain a colon or are substantive)
+  const fieldLines = scopeContent.split(/\r?\n/).filter(line => /^\s*-\s+\S/.test(line));
+
+  if (fieldLines.length >= 3) {
+    return [];
+  }
+
+  return [
+    buildIssue(
+      'scope-gate-quality',
+      relativePath,
+      `Scope gate has only ${fieldLines.length} field(s); minimum 3 required (goal, approach, and at least one of: boundary/risk/verification)`
+    ),
+  ];
+}
+
 function checkCloseGateRequiresScope(relativePath, content) {
   // Check that if a Close gate is present, a Scope gate is also present.
   // Skip files that are gate templates / process docs themselves.
@@ -443,6 +491,7 @@ function checkFile(filePath, baseDir) {
     ...checkCloseoutTargetTypes(relativePath, content),
     ...checkCloseGateContinuation(relativePath, content),
     ...checkProfilePathReferences(relativePath, content, baseDir),
+    ...checkScopeGateQuality(relativePath, content),
     ...checkCloseGateRequiresScope(relativePath, content),
   ];
 }

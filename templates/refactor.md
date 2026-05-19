@@ -4,6 +4,13 @@
 
 Improve boundaries, readability, or reuse without changing existing external behavior.
 
+## Not This Template
+
+Do not use refactor if:
+- External behavior will change (even slightly) → use `new-feature` or `bug-fix`
+- The restructuring spans multiple modules and the main risk is cross-module coordination → use `cross-module-change`
+- The change is purely cosmetic (rename a CSS class, fix a typo) → use tiny task shortcut directly
+
 ## Scope Gate Fields For Refactors
 
 When using this template, fold these fields into Scope gate:

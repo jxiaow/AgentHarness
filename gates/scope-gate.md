@@ -24,6 +24,24 @@ Use multi-line short lists, up to 6 items:
 - Cross-module: dependency direction, communication chain, why a single module change is insufficient
 - Long-running: a stage-level todo/checklist and execution order must exist before this gate
 
+## Judgment Criteria
+
+Use these to decide what to write in each field:
+
+**Goal**: Must name a specific observable problem or outcome. "Fix the bug" is not a goal. "Deployment page crashes when no host is selected" is.
+
+**Approach**: Must name the specific location and mechanism. "Change some code" is not an approach. "Normalize missing host state in the store selector" is.
+
+**Boundary**: Must name at least one thing that will NOT change. If you cannot name a boundary, the scope is too vague — ask for clarification or narrow it yourself.
+
+**Risk**: Apply this decision tree:
+- Does the change touch shared state, public interfaces, or cross-module boundaries? → Name the specific sharing risk.
+- Does the change have a failure mode that is not covered by the verification plan? → Name it.
+- Is the change isolated to one file with no external consumers? → Write "low — isolated change" (one line, not a paragraph).
+- Never write "no risk" for changes touching more than one module.
+
+**Verification**: Must name a concrete method (command, manual step, or contract). "Will verify" is not a plan. "Run `npm test -- auth`, check login page renders" is.
+
 ## Recommended Output
 
 ```text

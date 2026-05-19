@@ -4,6 +4,13 @@
 
 Clarify the feature goal, placement, and boundaries to avoid unbounded scope creep.
 
+## Not This Template
+
+Do not use new-feature if:
+- The work is restructuring existing code without adding new behavior → use `refactor`
+- The work is fixing broken existing behavior → use `bug-fix`
+- The feature touches multiple existing modules and the main challenge is coordination → use `cross-module-change`
+
 ## Scope Gate Fields For Features
 
 When using this template, fold these fields into Scope gate:

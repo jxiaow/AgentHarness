@@ -4,6 +4,13 @@
 
 Locate the root cause and fix the problem with the smallest possible change surface.
 
+## Not This Template
+
+Do not use bug-fix if:
+- The "bug" is actually a requirement change (user wants different behavior, not a fix) → use `new-feature` or `refactor`
+- The failure is only in tests but production behavior is correct → still use bug-fix, but apply test-failure-triage first
+- The issue spans multiple modules with no single root cause → use `cross-module-change`
+
 ## Scope Gate Fields For Bugs
 
 When using this template, fold these fields into Scope gate:

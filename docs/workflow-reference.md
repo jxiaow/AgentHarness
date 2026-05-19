@@ -70,14 +70,14 @@ Real blockers are limited to:
 
 ## Closeout Rules
 
-Before a final Close gate, the agent must decide which target type it is handling:
+Before a final Close gate, the agent must decide which target type it is handling. See `gates/close-gate.md` for the full decision tree and rules. Summary:
 
-- `single-task`: a bounded task; close only after the requested result and necessary verification are complete.
-- `staged/ongoing`: long-running remediation, migration, or multi-stage work; close only when the current phase has no actionable remaining item, or a real blocker appears.
-- `continuation`: the user says "continue", "start", "keep going", or similar; inherit the active phase and continue the next item.
-- `explicit-closeout`: the user asks to summarize, stop, or close; report the current verified state.
+- `single-task`: close after result and verification are complete.
+- `staged/ongoing`: close only when current phase has no actionable items.
+- `continuation`: inherit active phase, continue next item.
+- `explicit-closeout`: user asked to stop; report current verified state.
 
-If an active operations board or checklist exists under `docs/operations/<initiative>/`, the agent must read it before final Close gate and confirm that the highest-priority actionable item has been advanced.
+If an active operations board exists under `docs/operations/<initiative>/`, read it before closing.
 
 ## Long-Running Work
 

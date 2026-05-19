@@ -4,6 +4,13 @@
 
 Control the boundaries, dependency direction, and communication patterns of cross-module changes.
 
+## Not This Template
+
+Do not use cross-module-change if:
+- The change is contained within a single module even if it affects multiple files → use `bug-fix`, `new-feature`, or `refactor`
+- The cross-module aspect is only a test or documentation update → use the primary template for the code change
+- The work is a large-scale migration → use `cross-module-change` + long-running flow with Plan gate
+
 ## Scope Gate Fields For Cross-Module Changes
 
 When using this template, fold these fields into Scope gate:

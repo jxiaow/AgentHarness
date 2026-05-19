@@ -4,62 +4,86 @@
 
 Control agent context and command output volume without reducing conclusion quality; prevent the process itself from causing high token consumption.
 
-## Default Rules
+---
 
-1. Searches default to limited scope, excluding build artifact directories:
-   - `target/**`
-   - `node_modules/**`
-   - `dist/**`
-2. Prefer running commands on target paths; do not scan the entire repo.
-3. `git status` defaults to path parameters, only checking files relevant to the current task.
-4. File reading uses "locate + window" mode:
-   - First `rg -n` to locate line numbers
-   - Then `sed -n 'start,endp'` to read the fragment
-5. Truncate long output before making decisions:
-   - `head -n`
-   - `tail -n`
-6. Avoid re-reading the same large file; prefer reusing existing location results when rechecking.
-7. Gate output stays compact; do not repeat historical conclusions or template text.
-8. Automation checks default to "current changeset"; do not scan historical backlog as a daily default.
-9. Command output retains only the summary needed for decisions; if many issues exist, first output count, rule names, and first few locations.
+## Decision Rules
 
-## Automation Cost Budget
+### What scope to use
 
-Automation executes in cost tiers, starting from lowest cost by default:
+| Situation | Scope | Rationale |
+| --- | --- | --- |
+| Only changed process docs or harness core this turn | `--changed --summary --max-issues 3` | Minimal scan |
+| Added new entry points, routes, pages, commands, or exports | `--summary --max-issues 3 <path>` | Only relevant paths |
+| Preparing stage closeout or high-risk entry changes | Full lint / unit tests / build | Conclusion depends on broad results |
+| Routine code change, no process doc touched | Skip process check entirely | Not relevant |
 
-| Level      | Default use                    | Command example                                                                       | Token strategy                                    |
-| ---------- | ------------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `light`    | Daily dev, agent per-turn wrap | `node harness/core/automation/check-process.js --changed --summary --max-issues 3`    | Only scan changed process docs                    |
-| `targeted` | Specific module verification   | `node harness/core/automation/check-process.js --summary --max-issues 3 <path>`       | Only pass relevant files/dirs, not full repo      |
-| `full`     | Stage closeout, CI, pre-migration | `npm run lint` / full test suite                                                   | Only run when Close gate explains why      |
+### When to expand scope
 
-Default choices:
+Only expand beyond `--changed` when:
+- The current conclusion **depends** on files outside the diff
+- Close gate needs to state "full test suite passed" as evidence
+- A migration or rename could have broken references elsewhere
 
-1. Only changed process docs or harness core this turn: run `node harness/core/automation/check-process.js --changed --summary --max-issues 3`
-2. Added new entry points, routes, pages, commands, or exports: run project entry checks or `node harness/core/automation/check-process.js --summary --max-issues 3 <path>`
-3. Preparing stage closeout or high-risk entry changes: add lint / unit tests / build
+State the reason in Close gate before running a broad check.
 
-Do not run full test suites "for safety"; only when the current conclusion depends on full results.
+### When NOT to run checks
 
-## Output Budget
+- Do not run full test suites "for safety"
+- Do not scan historical backlog as a daily default
+- Do not re-read the same large file; reuse existing location results
+- Do not paste full stdout into the conversation
 
-- When running checks, only write the command and result in the final reply; do not paste full stdout.
-- On check failure, list at most 3-5 representative issues; summarize the rest by count.
-- When full location info is needed, prefer reading `.tmp/harness-check-report.json`; do not paste the full issue list into the conversation.
-- When long output needs further analysis, save or locate first, then read the relevant window.
-- If a check would scan 50+ files, first explain the scan scope and why it is necessary.
+### Output budget
 
-## Command Patterns
+- Commands: write the command and result only (1-2 lines)
+- Failures: list at most 3-5 representative issues; summarize the rest by count
+- Large reports: read `.tmp/harness-check-report.json` instead of pasting
+- 50+ file scans: explain scope and necessity before running
 
-- Search:
-  - `rg -n "pattern" <target-dir> --glob '!target/**' --glob '!node_modules/**' --glob '!dist/**'`
-- File listing:
-  - `rg --files <target-dir> --glob '!target/**' --glob '!node_modules/**' --glob '!dist/**'`
-- Status:
-  - `git status --short -- <path-a> <path-b>`
+---
 
-## Verification Expectation
+## Command Reference
 
-- Verification commands also follow the minimum scope principle; only run checks relevant to current changes.
-- If a broad-scope check must be run, explain the reason and scope in Close gate.
-- Harness process check passing cannot be described as business test passing; it only proves process docs and connected project checks pass.
+### Search
+
+```bash
+rg -n "pattern" <target-dir> --glob '!target/**' --glob '!node_modules/**' --glob '!dist/**'
+```
+
+### File listing
+
+```bash
+rg --files <target-dir> --glob '!target/**' --glob '!node_modules/**' --glob '!dist/**'
+```
+
+### Status (scoped)
+
+```bash
+git status --short -- <path-a> <path-b>
+```
+
+### File reading (locate + window)
+
+```bash
+rg -n "pattern" <file>          # locate line numbers
+sed -n 'start,endp' <file>      # read fragment
+```
+
+### Automation tiers
+
+| Level | Command | When |
+| --- | --- | --- |
+| `light` | `node harness/core/automation/check-process.js --changed --summary --max-issues 3` | Daily, per-turn |
+| `targeted` | `node harness/core/automation/check-process.js --summary --max-issues 3 <path>` | Specific module |
+| `full` | `npm run lint` / full test suite | Stage closeout, CI |
+
+---
+
+## Hard Rules
+
+1. Searches exclude `target/`, `node_modules/`, `dist/` by default.
+2. `git status` uses path parameters scoped to the current task.
+3. Gate output stays compact; do not repeat historical conclusions.
+4. Automation checks default to current changeset.
+5. Harness process check passing ≠ business test passing.
+6. If a broad check must run, explain why in Close gate.

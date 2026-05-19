@@ -4,6 +4,13 @@
 
 Control UI adjustment scope, ensuring visual, interaction, and theme adaptation are complete.
 
+## Not This Template
+
+Do not use ui-adjustment if:
+- The change is adding a new page or feature (not adjusting existing UI) → use `new-feature`
+- The change is fixing a crash or functional bug that happens to be in a UI component → use `bug-fix`
+- The change is restructuring component code without visual change → use `refactor`
+
 ## Scope Gate Fields For UI Changes
 
 When using this template, fold these fields into Scope gate:

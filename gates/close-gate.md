@@ -24,6 +24,23 @@ Before closing, decide which target type is being handled:
 
 If an active operations board or checklist exists under `docs/operations/<initiative>/`, the agent must read it before closing and confirm the highest-priority actionable item has been advanced.
 
+## Judgment Criteria
+
+**Result**: Must state the observable outcome, not just "done". "Missing-host crash fixed; empty-state renders correctly" is a result. "Completed the task" is not.
+
+**Verified**: Must name the actual command or method AND its result. "Checked it" is not verification. "`npm run test:unit -- deploy`: pass" is.
+
+**Unverified**: Apply this decision tree:
+- Is there a runtime path that was not exercised by any test or manual check? → Name it.
+- Is there an environment (production, mobile, different OS) not covered? → Name it.
+- Was everything in Scope's verification plan actually executed? → If yes, write "none beyond covered scope".
+- Never write "none" if the verification plan in Scope was not fully executed.
+
+**Risk**: Apply this decision tree:
+- Are there unverified paths that could fail in production? → Name the specific scenario.
+- Is the change fully covered by the verification that was run? → Write "none beyond stated unverified items" (do not repeat the unverified list).
+- Never write generic "low risk" without naming what could go wrong.
+
 ## Minimal Fields
 
 ```text
