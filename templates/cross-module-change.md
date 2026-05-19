@@ -4,9 +4,9 @@
 
 Control the boundaries, dependency direction, and communication patterns of cross-module changes.
 
-## Minimal Analysis
+## Scope Gate Fields For Cross-Module Changes
 
-Only add these 5 items by default:
+When using this template, fold these fields into Scope gate:
 
 - Modules involved
 - Primary change point
@@ -19,15 +19,18 @@ Only add these 5 items by default:
 - Touches runtime bridge: add adapter / command / IPC / message boundaries
 - Touches public interface: add entry point, permission boundaries, and communication chain
 - Touches state management: add state container, cache, or persistence boundaries
-- Long-running / multi-stage: first list stage-level todo/checklist, execution order, and current first stage
+- Long-running / multi-stage: switch to long-running flow with Plan gate; create operations workspace
 - A smaller entry point exists: explain why it is not used this time
 
 ## Recommended Output
 
 ```text
-Cross-module gate
+Scope gate
+- Task type: cross-module
 - Modules: ...
 - Primary target: ...
+- Why cross-module: ...
 - Communication chain: ...
+- Risk: ...
 - Verification: ...
 ```

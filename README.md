@@ -31,7 +31,7 @@ AI coding agents fail in predictable ways:
 agent-harness turns those failure modes into a repeatable workflow:
 
 ```
-Requirement → Design → Implementation → Verification → Delivery
+Scope → [Plan] → Build → Close
 ```
 
 The point is not ceremony — it's making agent work reviewable, recoverable, and less likely to drift.
@@ -64,18 +64,18 @@ With agent-harness:
 Task type
 Bug
 
-Requirement gate
+Scope gate
 - Symptom: deployment page fails when the selected host is missing.
 - Boundary: keep API shape and routing unchanged.
 - Expected behavior: show an actionable empty state.
 - Verification: targeted unit test and smoke path.
 
-Design gate
-- Fix point: normalize missing host state in the store, not inside the component.
-- Risk: host selection is shared by deployment and branch flows.
-- Rules: preserve Pinia state path and existing router entry.
+Build gate
+- Changed: store selector and DeploymentStatus empty-state branch.
+- Kept: route names, API shape, persisted host data format.
+- Deviated: no.
 
-Verification gate
+Close gate
 - `npm run test:unit -- deploy-host-selection`: pass
 - Manual smoke: deployment page empty state renders
 - Not covered: real SSH connection
@@ -177,11 +177,11 @@ Every task follows:
 
 ```
 1. Declare task type (bug / feature / refactor / UI / cross-module)
-2. Requirement gate — what are we solving, what's in/out of scope
-3. Design gate — where to change, what's the risk, how to verify
-4. Implementation — write code following project rules
-5. Verification gate — what was verified, what wasn't, residual risk
-6. Delivery gate — closeout with evidence
+2. Scope gate — what we're solving, the approach, boundary, risk, how to verify
+3. (Long-running only) Plan gate — operations workspace and current work package
+4. Implement
+5. Build gate — what was actually changed, any deviation from Scope
+6. Close gate — verification, unverified items, risk, final result
 ```
 
 Gates are process records, not approval pauses. The agent outputs them and keeps going unless there's a real blocker (needs user authorization, would overwrite existing work, requirement changed significantly, or key input is missing).

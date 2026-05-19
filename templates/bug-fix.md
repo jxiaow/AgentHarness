@@ -4,21 +4,21 @@
 
 Locate the root cause and fix the problem with the smallest possible change surface.
 
-## Minimal Analysis
+## Scope Gate Fields For Bugs
 
-Only add these 5 items by default:
+When using this template, fold these fields into Scope gate:
 
 - Symptom
 - Expected behavior
 - Root cause or suspected chain
-- Fix surface
+- Fix surface (where the change goes)
 - Verification method
 
 ## Test Failure Triage
 
 If the trigger is a test failure, or test failures are discovered during verification, first execute `harness/core/rules/test-failure-triage.md` before deciding whether to fix the test, the implementation, or the fixture.
 
-Bug gate should include:
+Scope gate should additionally include:
 
 - Failure type: implementation regression / stale test contract / requirement change not synced to tests / environment or fixture issue
 - Evidence: discrepancy between current requirements, implementation, and test assertions
@@ -37,10 +37,12 @@ Never revert UI, behavior, or architecture that the user explicitly chose to kee
 ## Recommended Output
 
 ```text
-Bug gate
+Scope gate
+- Task type: bug fix
 - Symptom: ...
 - Root cause/chain: ...
-- Test triage: ...
+- Test triage: ... (only when test failure triggered the bug)
 - Fix surface: ...
+- Risk: ...
 - Verification: ...
 ```

@@ -31,7 +31,7 @@ Automation executes in cost tiers, starting from lowest cost by default:
 | ---------- | ------------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | `light`    | Daily dev, agent per-turn wrap | `node harness/core/automation/check-process.js --changed --summary --max-issues 3`    | Only scan changed process docs                    |
 | `targeted` | Specific module verification   | `node harness/core/automation/check-process.js --summary --max-issues 3 <path>`       | Only pass relevant files/dirs, not full repo      |
-| `full`     | Stage closeout, CI, pre-migration | `npm run lint` / full test suite                                                   | Only run when Verification gate explains why      |
+| `full`     | Stage closeout, CI, pre-migration | `npm run lint` / full test suite                                                   | Only run when Close gate explains why      |
 
 Default choices:
 
@@ -61,5 +61,5 @@ Do not run full test suites "for safety"; only when the current conclusion depen
 ## Verification Expectation
 
 - Verification commands also follow the minimum scope principle; only run checks relevant to current changes.
-- If a broad-scope check must be run, explain the reason and scope in Verification gate.
+- If a broad-scope check must be run, explain the reason and scope in Close gate.
 - Harness process check passing cannot be described as business test passing; it only proves process docs and connected project checks pass.

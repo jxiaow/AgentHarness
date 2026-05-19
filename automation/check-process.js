@@ -200,7 +200,7 @@ function checkFinalCloseoutNextStepConflict(relativePath, content) {
 
 function checkGateOutputOneLine(relativePath, content) {
   const issues = [];
-  const gatePattern = /\b(Requirement|Design|Implementation|Verification|Delivery)\s+gate\s*[:：]/g;
+  const gatePattern = /\b(Scope|Plan|Build|Close|Git)\s+gate\s*[:：]/g;
   const taskTypePattern = /任务类型\s*[:：]|[Tt]ask\s+[Tt]ype\s*[:：]/;
   const lines = content.split(/\r?\n/);
 
@@ -309,10 +309,10 @@ function checkCloseoutTargetTypes(relativePath, content) {
   ];
 }
 
-function checkDeliveryContinuationCloseout(relativePath, content) {
+function checkCloseGateContinuation(relativePath, content) {
   const normalized = normalizePath(relativePath);
   // Match both consumer layout and core-local layout
-  if (normalized !== 'harness/core/gates/delivery-gate.md' && normalized !== 'gates/delivery-gate.md') {
+  if (normalized !== 'harness/core/gates/close-gate.md' && normalized !== 'gates/close-gate.md') {
     return [];
   }
 
@@ -326,7 +326,7 @@ function checkDeliveryContinuationCloseout(relativePath, content) {
   if (!/执行板|board/i.test(content) || !/checklist/.test(content)) {
     missing.push('missing board/checklist closeout confirmation');
   }
-  if (!/工作包完成当最终完成|工作包完成当作最终完成|仅完成一个工作包|single work package.*final|work package completion.*final/.test(content)) {
+  if (!/工作包完成当最终完成|工作包完成当作最终完成|仅完成一个工作包|single work package.*final|work package completion.*final|one work package.*final completion|treat one work package as final completion/.test(content)) {
     missing.push('missing rule forbidding single work package false closeout');
   }
 
@@ -336,9 +336,9 @@ function checkDeliveryContinuationCloseout(relativePath, content) {
 
   return [
     buildIssue(
-      'delivery-continuation-closeout',
+      'close-gate-continuation',
       relativePath,
-      `Delivery gate missing continuation closeout constraints: ${missing.join(', ')}`
+      `Close gate missing continuation closeout constraints: ${missing.join(', ')}`
     ),
   ];
 }
@@ -384,8 +384,8 @@ function checkProfilePathReferences(relativePath, content, baseDir) {
   return issues;
 }
 
-function checkDeliveryGateRequiresPriorGates(relativePath, content) {
-  // Check that if a Delivery gate is present, Requirement and Design gates are also present.
+function checkCloseGateRequiresScope(relativePath, content) {
+  // Check that if a Close gate is present, a Scope gate is also present.
   // Skip files that are gate templates / process docs themselves.
   const normalized = normalizePath(relativePath);
   if (
@@ -405,27 +405,23 @@ function checkDeliveryGateRequiresPriorGates(relativePath, content) {
     return [];
   }
 
-  if (!/\bDelivery gate\b|交付 gate|交付门/i.test(content)) {
+  // Match Close gate at the start of a line (actual gate output, not prose mention)
+  if (!/^\s*Close\s+gate\s*$|^\s*Close\s+gate\s*[:：]/im.test(content)) {
     return [];
   }
 
-  // Allow combined Scope gate (tiny task shortcut) to count as Requirement+Design
-  const hasRequirement = /\b(Requirement|Bug|Feature|Refactor|Cross-module|UI|Scope)\s+gate\b|需求 gate|需求门/i.test(content);
-  const hasDesign = /\bDesign\s+gate\b|设计 gate|设计门|\bScope\s+gate\b/i.test(content);
+  // Match Scope gate at the start of a line
+  const hasScope = /^\s*Scope\s+gate\s*$|^\s*Scope\s+gate\s*[:：]/im.test(content);
 
-  const missing = [];
-  if (!hasRequirement) missing.push('missing Requirement gate');
-  if (!hasDesign) missing.push('missing Design gate');
-
-  if (missing.length === 0) {
+  if (hasScope) {
     return [];
   }
 
   return [
     buildIssue(
-      'delivery-without-prior-gates',
+      'close-without-scope',
       relativePath,
-      `Delivery gate present without prior process gates: ${missing.join(', ')}`
+      'Close gate present without prior Scope gate'
     ),
   ];
 }
@@ -445,9 +441,9 @@ function checkFile(filePath, baseDir) {
     ...checkLongRunningPlan(relativePath, content),
     ...checkOperationDocLocation(relativePath, content),
     ...checkCloseoutTargetTypes(relativePath, content),
-    ...checkDeliveryContinuationCloseout(relativePath, content),
+    ...checkCloseGateContinuation(relativePath, content),
     ...checkProfilePathReferences(relativePath, content, baseDir),
-    ...checkDeliveryGateRequiresPriorGates(relativePath, content),
+    ...checkCloseGateRequiresScope(relativePath, content),
   ];
 }
 

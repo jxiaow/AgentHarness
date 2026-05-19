@@ -4,13 +4,13 @@
 
 Improve boundaries, readability, or reuse without changing existing external behavior.
 
-## Minimal Analysis
+## Scope Gate Fields For Refactors
 
-Only add these 5 items by default:
+When using this template, fold these fields into Scope gate:
 
 - Refactoring goal
-- Is behavior preserved
-- Boundary
+- Is behavior preserved (must explicitly say yes)
+- Boundary (what code stays untouched)
 - Core focus points
 - Verification method
 
@@ -19,15 +19,18 @@ Only add these 5 items by default:
 - Touches high-risk entry: explain why this specific location must be changed
 - Involves cross-module: explain dependency direction and communication boundaries
 - Needs phasing: explain which layer first, which layer next
-- Long-running / multi-stage: first list stage-level todo/checklist, execution order, and current first stage
+- Long-running / multi-stage: switch to long-running flow with Plan gate; create operations workspace
 - Just moving files: explain why this still provides structural benefit
 
 ## Recommended Output
 
 ```text
-Refactor gate
+Scope gate
+- Task type: refactor
 - Goal: ...
+- Behavior preserved: yes
 - Boundary: ...
 - Focus: ...
+- Risk: ...
 - Verification: ...
 ```

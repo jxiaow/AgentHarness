@@ -8,28 +8,27 @@ For every task, the agent should:
 
 1. Select the closest template from `templates/`.
 2. Decide task size: `tiny`, `normal`, or `long-running`.
-3. Output Requirement gate.
-4. Output Design gate.
-5. Read the relevant `rules/` and project rules.
+3. Output Scope gate.
+4. *(Long-running only)* Output Plan gate, create operations workspace.
+5. Read relevant `rules/` and project rules.
 6. Implement the change.
-7. Output Implementation gate.
+7. Output Build gate.
 8. Run necessary verification.
-9. Output Verification gate.
-10. Output Delivery gate.
+9. Output Close gate.
 
-Gates are not approval checkpoints by default. If there is no real blocker, the agent records the gate and continues.
+Gates are process records, not approval pauses. If there is no real blocker, the agent records the gate and continues.
 
 ## Task Sizes
 
-| Size | Use When | Extra Requirement |
-| ---- | -------- | ----------------- |
-| `tiny` | Single-file wording, style, or local config changes | May collapse Requirement + Design into one short gate (see Tiny Task Shortcut below) |
-| `normal` | Regular bugs, features, refactors, or UI changes | Read relevant rules before implementation |
-| `long-running` | Repository structure, workspace, migration, or multi-stage remediation | Create `docs/operations/<initiative>/` docs before implementation |
+| Size | Use When | Gate Flow |
+| ---- | -------- | --------- |
+| `tiny` | Single-file wording, style, or local config changes | `Scope → Close` (Build collapses to one line or merges into Close) |
+| `normal` | Regular bugs, features, refactors, or UI changes | `Scope → Build → Close` |
+| `long-running` | Repository structure, workspace, migration, or multi-stage remediation | `Scope → Plan → Build → Close` (Plan creates `docs/operations/<initiative>/`) |
 
 ### Tiny Task Shortcut
 
-For tiny tasks, the agent may collapse Requirement and Design into a single combined gate to avoid ceremony:
+For tiny tasks where the change is trivial and matches Scope exactly:
 
 ```text
 Task type
@@ -37,29 +36,28 @@ Tiny
 
 Scope gate
 - Goal: fix typo in error message in src/api/auth.js
-- Approach: change one string literal, no behavior change
+- Approach: change one string literal
+- Risk: none
 - Verification: visual diff
+
+Build gate: implemented as scoped, no deviations.
+
+Close gate
+- Result: typo corrected
+- Verified: build pass, visual diff
+- Unverified and risk: none beyond covered scope
 ```
-
-This shortcut applies only when ALL of these hold:
-
-- Single-file change with clear scope
-- No risk of cross-module impact
-- No new external dependencies or interfaces
-- Verification is trivial (read-the-diff or build pass)
-
-If any of those don't hold, fall back to separate Requirement + Design gates.
 
 ## Execution Model
 
 agent-harness defaults to autopilot execution:
 
-1. If there is no real blocker, the agent continues from requirement and design through implementation, verification, and delivery.
-2. Requirement and Design gates must happen before implementation. They are records, not approval pauses.
-3. Long-running or multi-stage work must create phase-level todos, a checklist, and an execution order before implementation.
+1. If there is no real blocker, the agent continues from Scope through Build and Close.
+2. Scope gate must happen before implementation. It is a record, not an approval pause.
+3. Long-running or multi-stage work must create phase-level todos, a checklist, and an execution order in Plan gate before implementation.
 4. Finishing one work package is not a final closeout. The agent should continue to the next actionable item.
 5. "Continue", "start", and "keep going" mean continuing the active phase by default.
-6. A final closeout is allowed only when the current target is complete or a real blocker appears.
+6. A final Close gate is allowed only when the current target is complete or a real blocker appears.
 7. Durable decisions can be written to `docs/development/changes/`, but only at phase closeout, after high-risk work is complete, or when the user explicitly asks for it.
 8. External skills or planning tools should not inflate the workflow. Collapse their output into the harness gates and continue unless there is a real blocker.
 
@@ -72,18 +70,18 @@ Real blockers are limited to:
 
 ## Closeout Rules
 
-Before a final closeout, the agent must decide which target type it is handling:
+Before a final Close gate, the agent must decide which target type it is handling:
 
 - `single-task`: a bounded task; close only after the requested result and necessary verification are complete.
 - `staged/ongoing`: long-running remediation, migration, or multi-stage work; close only when the current phase has no actionable remaining item, or a real blocker appears.
 - `continuation`: the user says "continue", "start", "keep going", or similar; inherit the active phase and continue the next item.
 - `explicit-closeout`: the user asks to summarize, stop, or close; report the current verified state.
 
-If an active operations board or checklist exists under `docs/operations/<initiative>/`, the agent must read it before final closeout and confirm that the highest-priority actionable item has been advanced.
+If an active operations board or checklist exists under `docs/operations/<initiative>/`, the agent must read it before final Close gate and confirm that the highest-priority actionable item has been advanced.
 
 ## Long-Running Work
 
-For migrations, repo restructures, or continuous remediation, create an operations workspace:
+For migrations, repo restructures, or continuous remediation, create an operations workspace in Plan gate:
 
 ```bash
 node harness/core/operations/create-operation-docs.js <initiative>
@@ -107,7 +105,7 @@ Use these files as the source of truth for:
 - verification matrix
 - decisions and reopen conditions
 
-A work package finishing is not the same thing as the whole task finishing. The agent should continue to the next highest-priority item unless the phase is complete or a real blocker appears.
+A work package finishing is not the same as the whole task finishing. Continue to the next highest-priority item unless the phase is complete or a real blocker appears.
 
 ## Long-Running Remediation Workflow
 
@@ -115,9 +113,10 @@ Use this workflow for repository restructures, workspace changes, package rename
 
 Before implementation:
 
-1. Create or reuse `docs/operations/<initiative>/`.
-2. Write the phase-level todo/checklist, execution order, non-goals, and first work package.
-3. Update the board so the current highest-priority work package is explicit.
+1. Output Scope gate.
+2. Create or reuse `docs/operations/<initiative>/` and output Plan gate.
+3. Write the phase-level todo/checklist, execution order, non-goals, and first work package in the operations docs.
+4. Update the board so the current highest-priority work package is explicit.
 
 Each work package should record:
 
@@ -152,10 +151,11 @@ Default agent output should be compact:
 
 - Start with one sentence: goal and first action.
 - Put task type on its own line.
-- Keep Requirement and Design gates to short bullets.
+- Keep Scope gate to short bullets.
+- Build gate is short by design; if no deviation, one line is enough.
 - Do not treat gates as a pause.
-- Do not output a final closeout for a single work package if the larger goal still has work.
-- In the final closeout, separate completed work, verification, unverified areas, and real remaining risk.
+- Do not output a final Close gate for a single work package if the larger goal still has work.
+- In Close gate, separate completed work, verification, unverified areas, and real remaining risk.
 
 ## Lean Execution Defaults
 
@@ -166,7 +166,7 @@ Default command and context usage should stay small:
 3. Read files by locating first, then opening a small window.
 4. Truncate long outputs and keep only decision-relevant lines.
 5. Prefer changed-file process checks over full lint/test runs unless the conclusion depends on a broader check.
-6. If a broad check is necessary, state the reason and scope in Verification gate.
+6. If a broad check is necessary, state the reason and scope in Close gate.
 
 Details live in [../rules/token-efficiency.md](../rules/token-efficiency.md).
 
@@ -194,4 +194,4 @@ For small wording, spacing, color-token, static style-contract, or pure logic ch
 
 When a server is necessary, state the purpose, command, and expected port before starting it, then provide the URL. Before closeout, confirm whether the server should be stopped or explain why it should stay running. On port conflicts, make one reasonable port switch and clean up any failed startup residue.
 
-Starting the server is not browser verification. The Verification gate must state the actual paths, viewports, states, and gaps that were checked.
+Starting the server is not browser verification. The Close gate must state the actual paths, viewports, states, and gaps that were checked.

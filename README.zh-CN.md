@@ -31,7 +31,7 @@ AI coding agent 很有用，但它们会以可预测的方式失败：
 agent-harness 把这些失败模式收敛成一个小而可重复的工作流：
 
 ```text
-Requirement → Design → Implementation → Verification → Delivery
+Scope → [Plan] → Build → Close
 ```
 
 重点不是增加仪式感，而是让 agent 的工作可审阅、可恢复，并且更不容易跑偏。
@@ -64,18 +64,18 @@ Agent: I changed three files. It should work now.
 Task type
 Bug
 
-Requirement gate
+Scope gate
 - Symptom: deployment page fails when the selected host is missing.
 - Boundary: keep API shape and routing unchanged.
 - Expected behavior: show an actionable empty state.
 - Verification: targeted unit test and smoke path.
 
-Design gate
-- Fix point: normalize missing host state in the store, not inside the component.
-- Risk: host selection is shared by deployment and branch flows.
-- Rules: preserve Pinia state path and existing router entry.
+Build gate
+- Changed: store selector and DeploymentStatus empty-state branch.
+- Kept: route names, API shape, persisted host data format.
+- Deviated: no.
 
-Verification gate
+Close gate
 - `npm run test:unit -- deploy-host-selection`: pass
 - Manual smoke: deployment page empty state renders
 - Not covered: real SSH connection
@@ -177,11 +177,11 @@ harness/
 
 ```text
 1. 声明任务类型（bug / feature / refactor / UI / cross-module）
-2. Requirement gate — 解决什么问题，范围内外是什么
-3. Design gate — 改哪里，风险是什么，怎么验证
-4. Implementation — 在项目规则内写代码
-5. Verification gate — 验证了什么，没验证什么，残余风险
-6. Delivery gate — 带证据的交付收口
+2. Scope gate — 解决什么、怎么改、boundary、风险、怎么验证
+3. （仅长任务）Plan gate — 运行态工作区和当前工作包
+4. 实现
+5. Build gate — 实际改了什么，是否偏离 Scope
+6. Close gate — 验证、未盖到、风险、最终结果
 ```
 
 Gate 是过程记录，不是审批暂停点。agent 输出 gate 后继续推进，除非遇到真正的阻塞（需要用户授权、会覆盖已有工作、需求发生重大变化、或缺少关键输入）。

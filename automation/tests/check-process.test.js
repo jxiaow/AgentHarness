@@ -185,14 +185,14 @@ final closeout 默认必须包含结果、验证、风险和下一步字段。
 
   it('fails docs that show multiple gate outputs on one line', () => {
     writeFixture(
-      'harness/core/README.md',
+      'task.md',
       `# Process
 
-Requirement gate：范围明确。Design gate：改文档。Implementation gate：补脚本。
+Scope gate：范围明确。Build gate：改文档。Close gate：完成。
 `
     );
 
-    const result = runCheck('harness/core');
+    const result = runCheck('task.md');
 
     expect(result.status).toBe(1);
     expect(result.stdout).toContain('gate-output-one-line');
@@ -200,14 +200,14 @@ Requirement gate：范围明确。Design gate：改文档。Implementation gate�
 
   it('fails docs that put task type and gate output on one line', () => {
     writeFixture(
-      'harness/core/README.md',
+      'task.md',
       `# Process
 
-任务类型：重构 Requirement gate：范围明确
+任务类型：重构 Scope gate：范围明确
 `
     );
 
-    const result = runCheck('harness/core');
+    const result = runCheck('task.md');
 
     expect(result.status).toBe(1);
     expect(result.stdout).toContain('gate-output-one-line');
@@ -390,8 +390,8 @@ final closeout
 
   it('does not flag process rule documentation that only describes check keywords', () => {
     writeFixture(
-      'harness/core/gates/delivery-gate.md',
-      `# Delivery Gate
+      'gates/close-gate.md',
+      `# Close Gate
 
 Only output final closeout when work is not in_progress.
 long-running tasks need checklist examples.
@@ -445,10 +445,10 @@ final closeout 前必须先判定当前目标类型：
     expect(result.status).toBe(0);
   });
 
-  it('fails Delivery gate when continuation closeout constraints are missing', () => {
+  it('fails Close gate when continuation closeout constraints are missing', () => {
     writeFixture(
-      'harness/core/gates/delivery-gate.md',
-      `# Delivery Gate
+      'gates/close-gate.md',
+      `# Close Gate
 
 ## Final Closeout Conditions
 
@@ -458,27 +458,27 @@ final closeout 前必须先判定当前目标类型：
 `
     );
 
-    const result = runCheck('harness/core/gates/delivery-gate.md');
+    const result = runCheck('gates/close-gate.md');
 
     expect(result.status).toBe(1);
-    expect(result.stdout).toContain('delivery-continuation-closeout');
+    expect(result.stdout).toContain('close-gate-continuation');
     expect(result.stdout).toContain('continuation');
   });
 
-  it('passes Delivery gate when continuation and board closeout constraints are present', () => {
+  it('passes Close gate when continuation and board closeout constraints are present', () => {
     writeFixture(
-      'harness/core/gates/delivery-gate.md',
-      `# Delivery Gate
+      'gates/close-gate.md',
+      `# Close Gate
 
 ## Final Closeout Conditions
 
 - continuation：用户只说“继续 / 开始 / 接着做 / 按计划执行”时继承上一个活动阶段目标。
 - 若使用执行板或 checklist，已读取它并确认无下一可执行动作。
-- 不能把工作包完成当最终完成。
+- Do not treat one work package as final completion.
 `
     );
 
-    const result = runCheck('harness/core/gates/delivery-gate.md');
+    const result = runCheck('gates/close-gate.md');
 
     expect(result.status).toBe(0);
   });
@@ -527,12 +527,12 @@ final closeout 前必须先判定当前目标类型：
     expect(result.status).toBe(0);
   });
 
-  it('flags Delivery gate output without prior Requirement and Design gates', () => {
+  it('flags Close gate output without prior Scope gate', () => {
     writeFixture(
       'task-output.md',
       `# Task Output
 
-Delivery gate
+Close gate
 - Result: completed
 - Verified: build pass
 `
@@ -541,23 +541,19 @@ Delivery gate
     const result = runCheck('task-output.md');
 
     expect(result.status).toBe(1);
-    expect(result.stdout).toContain('delivery-without-prior-gates');
-    expect(result.stdout).toContain('Requirement gate');
-    expect(result.stdout).toContain('Design gate');
+    expect(result.stdout).toContain('close-without-scope');
+    expect(result.stdout).toContain('Scope gate');
   });
 
-  it('passes Delivery gate output when Requirement and Design gates are present', () => {
+  it('passes Close gate output when Scope gate is present', () => {
     writeFixture(
       'task-output.md',
       `# Task Output
 
-Requirement gate
+Scope gate
 - Goal: fix bug
 
-Design gate
-- Approach: change one line
-
-Delivery gate
+Close gate
 - Result: completed
 - Verified: build pass
 - Unverified: none
@@ -580,7 +576,7 @@ Scope gate
 - Approach: change one string
 - Verification: visual diff
 
-Delivery gate
+Close gate
 - Result: typo fixed
 - Verified: visual diff
 - Unverified: none
@@ -593,23 +589,23 @@ Delivery gate
     expect(result.status).toBe(0);
   });
 
-  it('does not flag gate template files for delivery-without-prior-gates', () => {
+  it('does not flag gate template files for close-without-scope', () => {
     writeFixture(
-      'gates/delivery-gate.md',
-      `# Delivery Gate
+      'gates/close-gate.md',
+      `# Close Gate
 
-This file describes Delivery gate without needing prior gates because it IS the template.
+This file describes Close gate without needing prior gates because it IS the template.
 
 - continuation：用户只说"继续 / 开始 / 接着做 / 按计划执行"时继承上一个活动阶段目标。
 - 若使用执行板或 checklist，已读取它并确认无下一可执行动作。
-- 不能把工作包完成当最终完成。
+- Do not treat one work package as final completion.
 `
     );
 
-    const result = runCheck('gates/delivery-gate.md');
+    const result = runCheck('gates/close-gate.md');
 
-    // Expected: no delivery-without-prior-gates issue (it's a template, not actual output)
-    expect(result.stdout).not.toContain('delivery-without-prior-gates');
+    // Expected: no close-without-scope issue (it's a template, not actual output)
+    expect(result.stdout).not.toContain('close-without-scope');
   });
 
   it('does not flag stable change logs that mention boards or matrices', () => {
@@ -644,10 +640,10 @@ This change explains why an execution board can prevent early closeout.
     expect(result.stdout).toContain('Default scan scope');
   });
 
-  it('checks delivery gate continuation constraints in core-local path', () => {
+  it('checks close gate continuation constraints in core-local path', () => {
     writeFixture(
-      'gates/delivery-gate.md',
-      `# Delivery Gate
+      'gates/close-gate.md',
+      `# Close Gate
 
 ## Final Closeout Conditions
 
@@ -657,26 +653,26 @@ This change explains why an execution board can prevent early closeout.
 `
     );
 
-    const result = runCheck('gates/delivery-gate.md');
+    const result = runCheck('gates/close-gate.md');
 
     expect(result.status).toBe(1);
-    expect(result.stdout).toContain('delivery-continuation-closeout');
+    expect(result.stdout).toContain('close-gate-continuation');
   });
 
-  it('passes delivery gate in core-local path when constraints are present', () => {
+  it('passes close gate in core-local path when constraints are present', () => {
     writeFixture(
-      'gates/delivery-gate.md',
-      `# Delivery Gate
+      'gates/close-gate.md',
+      `# Close Gate
 
 ## Final Closeout Conditions
 
 - continuation：用户只说"继续 / 开始 / 接着做 / 按计划执行"时继承上一个活动阶段目标。
 - 若使用执行板或 checklist，已读取它并确认无下一可执行动作。
-- 不能把工作包完成当最终完成。
+- Do not treat one work package as final completion.
 `
     );
 
-    const result = runCheck('gates/delivery-gate.md');
+    const result = runCheck('gates/close-gate.md');
 
     expect(result.status).toBe(0);
   });

@@ -28,7 +28,7 @@ Cannot decide to change production code based solely on "test failed".
 
 ## Hard Rules
 
-- If current implementation was just changed by the user, explicitly requested to keep, or determined as target state by Design gate, reverting implementation to satisfy old tests is forbidden.
+- If current implementation was just changed by the user, explicitly requested to keep, or determined as target state by Scope gate, reverting implementation to satisfy old tests is forbidden.
 - When tests assert old classes, old DOM hierarchy, old props, old snapshots, or old copy, first verify whether those assertions are still the current contract; if not, update the test.
 - When fixing tests, cannot delete assertions to "let failures pass"; must migrate assertions to current observable behavior, interactions, accessibility, or data contracts.
 - When fixing production code, cannot break user-confirmed UI, behavior, or architecture boundaries to satisfy tests.
@@ -36,7 +36,7 @@ Cannot decide to change production code based solely on "test failed".
 
 ## Gate Output Requirements
 
-Add test failure triage conclusion in Bug / Verification gate:
+Add test failure triage conclusion in Scope / Close gate:
 
 ```text
 Test failure triage

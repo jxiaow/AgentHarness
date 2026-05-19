@@ -21,21 +21,23 @@ Selection rules:
 Default requirements:
 
 - Match the closest primary template first
-- Only add minimal analysis points; inline into Requirement / Design gate by default, do not output a separate template section
+- Only add minimal analysis points; inline into Scope gate by default, do not output a separate template section
 - When multiple templates match, use the primary template and only supplement missing boundaries from secondary templates
 
 Task sizing:
 
-- `tiny`: template uses only 2-3 key fields; still must output Requirement / Design gate
+- `tiny`: template uses only 2-3 key fields; Build gate may collapse to one line
 - `normal`: use template default minimal analysis points
-- `long-running`: beyond template fields, must first have a stage-level todo/checklist, execution order, and current first work package
+- `long-running`: beyond template fields, output Plan gate with stage-level todo/checklist, execution order, and current first work package
 
 Example:
 
 ```text
-Refactor gate
+Scope gate
+- Task type: refactor
 - Goal: reduce repetition in process documentation
+- Approach: collapse Requirement/Design and Verification/Delivery gates
 - Boundary: only change harness/core docs, not business code
-- Focus: task sizing, responsibility layering, closeout evidence
-- Verification: Markdown static check and diff review
+- Risk: existing consumers may have memorized old gate names
+- Verification: Markdown static check, run process check on whole repo
 ```

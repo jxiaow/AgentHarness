@@ -4,13 +4,13 @@
 
 Clarify the feature goal, placement, and boundaries to avoid unbounded scope creep.
 
-## Minimal Analysis
+## Scope Gate Fields For Features
 
-Only add these 5 items by default:
+When using this template, fold these fields into Scope gate:
 
 - Feature goal
 - Target user / entry point
-- Primary placement
+- Primary placement (where new code goes)
 - Success criteria
 - Explicitly out of scope
 
@@ -24,9 +24,12 @@ Only add these 5 items by default:
 ## Recommended Output
 
 ```text
-Feature gate
+Scope gate
+- Task type: feature
 - Goal: ...
 - Placement: ...
-- Key changes: ...
+- Approach: ...
+- Boundary: ...
+- Risk: ...
 - Verification: ...
 ```

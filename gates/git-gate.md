@@ -4,11 +4,11 @@
 
 Constrain the minimum standards for committing code after completing a development task, avoiding poor commit quality, unrelated changes, or leaked sensitive information.
 
-This stage focuses on "how code enters version control", not code quality itself (that is the job of implementation gate and verification gate).
+This stage focuses on "how code enters version control", not code quality itself (that is the job of Build gate and Close gate).
 
 ## When To Use
 
-Only enter Git gate when the user explicitly requests a commit, branch creation, or PR preparation. After normal code changes are complete, just state the change scope and verification results in the Delivery gate.
+Only enter Git gate when the user explicitly requests a commit, branch creation, or PR preparation. After normal code changes are complete, just state the change scope and verification results in the Close gate.
 
 ## Must Check
 

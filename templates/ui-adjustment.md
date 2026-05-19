@@ -4,9 +4,9 @@
 
 Control UI adjustment scope, ensuring visual, interaction, and theme adaptation are complete.
 
-## Minimal Analysis
+## Scope Gate Fields For UI Changes
 
-Only add these 5 items by default:
+When using this template, fold these fields into Scope gate:
 
 - Adjustment type
 - Affected pages/components
@@ -14,16 +14,16 @@ Only add these 5 items by default:
 - Verification method
 - Residual risk
 
-## Design Approval Gate
+## Design Approval (Pause After Scope Gate)
 
-The following situations require pausing after Design gate to generate a previewable HTML UI mockup for user confirmation; business implementation is forbidden before confirmation:
+The following situations require pausing after Scope gate to generate a previewable HTML UI mockup for user confirmation; implementation is forbidden before confirmation:
 
 - User requests "redesign UI / redo interface / full overhaul / visual direction"
 - Changes affect page information architecture, core layout, visual style, or multiple core pages
 - Multiple viable visual directions require trade-off decisions
 - User judgment is needed on whether "what it looks like" meets expectations
 
-Design gate must at minimum provide:
+Scope gate must at minimum provide:
 
 - Target pages and layout approach for each
 - Core visual direction (density, color, card/table/log form factors)
@@ -53,7 +53,7 @@ The following situations do NOT require pausing; proceed with Autopilot:
 
 ## Design System Sync (auto-triggered)
 
-When UI adjustments involve any of the following, the corresponding design system documentation **must** be synced before Delivery gate (if the project maintains design system docs under `docs/design/`):
+When UI adjustments involve any of the following, the corresponding design system documentation **must** be synced before Close gate (if the project maintains design system docs under `docs/design/`):
 
 | Trigger | Sync target |
 | --- | --- |
@@ -67,7 +67,7 @@ Rules:
 
 - Sync is part of implementation, not an optional follow-up.
 - Only update affected entries; do not rewrite the entire document.
-- Delivery gate must list which design system files were synced; explain if not synced.
+- Close gate must list which design system files were synced; explain if not synced.
 
 ## Only Add When Relevant
 
@@ -79,9 +79,11 @@ Rules:
 ## Recommended Output
 
 ```text
-UI gate
-- Type: ...
+Scope gate
+- Task type: UI
 - Affected: ...
 - Changes: ...
+- States: ...
+- Risk: ...
 - Verification: ...
 ```
