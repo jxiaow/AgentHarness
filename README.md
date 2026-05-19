@@ -245,7 +245,8 @@ Add these to your `package.json` for convenient access:
   "scripts": {
     "process:check": "node harness/core/automation/check-process.js",
     "harness:check": "node harness/core/automation/check-harness.js",
-    "harness:ops:init": "node harness/core/operations/create-operation-docs.js"
+    "harness:ops:init": "node harness/core/operations/create-operation-docs.js",
+    "harness:install-hooks": "node harness/core/automation/install-hooks.js"
   }
 }
 ```
@@ -255,10 +256,12 @@ Add these to your `package.json` for convenient access:
 | `process:check` | Check Markdown structure and gate conventions |
 | `harness:check` | Combined check — runs process + project entry checks sequentially |
 | `harness:ops:init` | Create operations workspace for long-running initiatives |
+| `harness:install-hooks` | Install git pre-commit hook to run harness:check on staged files |
 
 Usage tips:
 - Daily wrap-up: `npm run harness:check -- --changed --summary --max-issues 3`
 - Pre-commit: `npm run harness:check -- --staged --summary`
+- Auto pre-commit: `npm run harness:install-hooks` (one-time setup)
 - Full scan: `npm run process:check`
 
 ---

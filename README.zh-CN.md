@@ -245,7 +245,8 @@ git submodule update --init
   "scripts": {
     "process:check": "node harness/core/automation/check-process.js",
     "harness:check": "node harness/core/automation/check-harness.js",
-    "harness:ops:init": "node harness/core/operations/create-operation-docs.js"
+    "harness:ops:init": "node harness/core/operations/create-operation-docs.js",
+    "harness:install-hooks": "node harness/core/automation/install-hooks.js"
   }
 }
 ```
@@ -255,10 +256,12 @@ git submodule update --init
 | `process:check` | 检查 Markdown 结构和 gate 规范 |
 | `harness:check` | 组合检查 — 依次运行流程检查 + 项目入口检查 |
 | `harness:ops:init` | 为长周期任务创建运行态文档工作区 |
+| `harness:install-hooks` | 安装 git pre-commit hook，每次提交自动跑 harness:check |
 
 使用示例：
 - 日常收口：`npm run harness:check -- --changed --summary --max-issues 3`
 - Pre-commit：`npm run harness:check -- --staged --summary`
+- 自动 pre-commit：`npm run harness:install-hooks`（一次性配置）
 - 全量扫描：`npm run process:check`
 
 ---

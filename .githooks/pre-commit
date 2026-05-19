@@ -1,0 +1,25 @@
+#!/bin/sh
+# agent-harness pre-commit hook
+#
+# Runs harness checks on staged files before commit.
+# Install with: node automation/install-hooks.js
+# Or for consumer repos: node harness/core/automation/install-hooks.js
+
+set -e
+
+# Skip if no staged files
+if [ -z "$(git diff --cached --name-only)" ]; then
+  exit 0
+fi
+
+# Find check-harness.js (consumer layout first, then core-local)
+if [ -f "harness/core/automation/check-harness.js" ]; then
+  SCRIPT="harness/core/automation/check-harness.js"
+elif [ -f "automation/check-harness.js" ]; then
+  SCRIPT="automation/check-harness.js"
+else
+  echo "agent-harness: check-harness.js not found; skipping pre-commit checks"
+  exit 0
+fi
+
+node "$SCRIPT" --staged --summary --max-issues 3

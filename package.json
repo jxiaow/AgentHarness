@@ -7,7 +7,8 @@
     "harness:test": "vitest run",
     "process:check": "node automation/check-process.js",
     "harness:check": "node automation/check-harness.js",
-    "harness:ops:init": "node operations/create-operation-docs.js"
+    "harness:ops:init": "node operations/create-operation-docs.js",
+    "harness:install-hooks": "node automation/install-hooks.js"
   },
   "devDependencies": {
     "vitest": "1.6.1"

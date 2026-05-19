@@ -9,6 +9,7 @@ This directory contains process checks, entry checks, and rule-to-automation map
 | `check-process.js` | Harness core process check (Markdown structure, gate conventions) |
 | `check-entry.js` | Project entry check (configuration-driven; loads rules from `harness/project/entry-checks.json`) |
 | `check-harness.js` | Combined check (runs process + entry sequentially) |
+| `install-hooks.js` | Install harness git hooks (pre-commit by default) |
 | `entry-checks.example.json` | Example configuration for entry checks |
 | `rule-to-check-map.md` | Rule-to-automation mapping reference |
 
@@ -58,3 +59,15 @@ See `entry-checks.example.json` for a complete example.
 - On bulk failures, use `--summary` to see rule distribution
 - Detailed report written to `.tmp/harness-check-report.json`
 - Full lint/test/build only for stage closeout or high-risk changes
+
+## Git Hooks
+
+To run harness checks automatically before each commit:
+
+```bash
+node harness/core/automation/install-hooks.js
+```
+
+This installs `.githooks/pre-commit` into `.git/hooks/` (uses `harness:check --staged --summary --max-issues 3`).
+
+The script will not overwrite existing non-harness hook files unless you pass `--force`. To remove harness hooks later, use `--uninstall`.
