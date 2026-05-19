@@ -1,10 +1,23 @@
-# Onboard — AI Integration Instructions
+# Onboard — AI Self-Service Integration
 
-This file is the single execution entry point when an AI agent integrates with a new project. After reading this file, execute directly without needing to read other documents.
+This file is the single instruction set for an AI agent to integrate agent-harness into any project. Read this file, then execute all steps autonomously.
 
-## Trigger Condition
+---
 
-When the user says "integrate harness / generate profile / initialize workflow", execute the following steps.
+## Step 0: Add Submodule (if not already present)
+
+Check if `harness/core/` exists in the repository.
+
+- If it does NOT exist, run:
+  ```bash
+  git submodule add https://github.com/jxiaow/agent-harness.git harness/core
+  ```
+- If it already exists, skip this step.
+
+Create `harness/project/rules/` if it does not exist:
+```bash
+mkdir -p harness/project/rules
+```
 
 ---
 
@@ -23,7 +36,9 @@ Scan the following information; do not guess when uncertain:
 
 ## Step 2: Generate `harness/project/profile.md`
 
-Infer from the actual repository structure and output in the following format:
+If `harness/project/profile.md` already exists, read it and update only sections that are outdated or incomplete. Do not overwrite user-customized content.
+
+If it does not exist, create it from the actual repository structure:
 
 ```markdown
 # Project Profile
@@ -57,7 +72,9 @@ Infer from the actual repository structure and output in the following format:
 
 ## Step 3: Generate Project Rules
 
-Create project-specific rule files in `harness/project/rules/`.
+If `harness/project/rules/` already contains rule files, read them and only add new rules for risk points not yet covered. Do not overwrite or delete existing rules.
+
+If the directory is empty, create project-specific rule files.
 
 **Guiding principle:** Identify risk points in this repository where the agent is likely to make mistakes. Each risk point corresponds to one rule file. Common risk points include but are not limited to:
 
@@ -98,16 +115,46 @@ After generating rules, backfill the Active Rules and Reading Sets in `profile.m
 
 ---
 
-## Step 4: Generate `AGENTS.md`
+## Step 4: Generate or Merge `AGENTS.md`
+
+### If `AGENTS.md` does NOT exist at repo root:
 
 Copy the content of `harness/core/AGENTS.template.md` to the repository root as `AGENTS.md`, then append the Project Hard Constraints from `profile.md` to the end of Hard Constraints.
 
+### If `AGENTS.md` ALREADY exists at repo root:
+
+Do NOT overwrite it. Instead:
+
+1. Read the existing `AGENTS.md` and `harness/core/AGENTS.template.md`.
+2. Identify what is already covered in the existing file.
+3. Merge missing sections from the template into the existing file:
+   - If the existing file has no workflow section, add the Standard Workflow and gate flow.
+   - If the existing file has no auto-trigger table, add it.
+   - If the existing file has no hard constraints, add them.
+   - If the existing file already has equivalent content (even with different wording), keep the existing version.
+4. Add a Navigation section pointing to `harness/core/` paths if not already present.
+5. Append Project Hard Constraints from `profile.md` if not already present.
+6. Preserve all existing content that does not conflict with the harness workflow.
+
 ---
 
-## Step 5: Verify
+## Step 5: Install Pre-commit Hook (optional)
 
-- All paths in `profile.md` actually exist in the repository
+If the project uses git hooks and the user has not declined:
+
+```bash
+node harness/core/automation/install-hooks.js
+```
+
+If the hook cannot be installed (no `.git` directory, permissions issue, or user declined), skip and note it.
+
+---
+
+## Step 6: Verify
+
+- All paths referenced in `profile.md` actually exist in the repository
 - Repo Facts paths in rule files actually exist
+- `AGENTS.md` exists at repo root and contains the workflow entry point
 - Write "no stable entry point found" for non-existent entries; do not fabricate
 
 ---
@@ -118,3 +165,5 @@ Copy the content of `harness/core/AGENTS.template.md` to the repository root as 
 - Rules should only describe patterns that are already stable, not one-off temporary conventions
 - Do not modify generic rule files in `harness/core/rules/`
 - When uncertain, write less rather than guess
+- Never overwrite user-customized content without explicit instruction
+- If a conflict cannot be resolved automatically, explain the conflict and ask the user to choose
