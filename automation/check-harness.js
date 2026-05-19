@@ -100,7 +100,31 @@ function resolveExplicitTargets(argv) {
   return targets;
 }
 
+function printUsage() {
+  console.log('Usage: node harness/core/automation/check-harness.js [options] [paths...]');
+  console.log('');
+  console.log('Runs both check-process.js and check-entry.js sequentially.');
+  console.log('');
+  console.log('Options:');
+  console.log('  --changed         Check files in working tree diff (default if no paths given)');
+  console.log('  --staged          Check files in staged diff');
+  console.log('  --summary         Output rule counts only');
+  console.log('  --max-issues <n>  Limit issue output count (default 5)');
+  console.log('  --report <path>   Write detailed JSON report (default .tmp/harness-check-report.json)');
+  console.log('  --help, -h        Show this message');
+  console.log('');
+  console.log('Examples:');
+  console.log('  node harness/core/automation/check-harness.js --changed --summary');
+  console.log('  node harness/core/automation/check-harness.js --staged --max-issues 10');
+  console.log('  node harness/core/automation/check-harness.js docs templates');
+}
+
 function main() {
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    printUsage();
+    process.exit(0);
+  }
+
   const layout = resolveHarnessLayout();
   const argv = process.argv.slice(2);
   const explicitTargets = argv.includes('--staged') ? [] : resolveExplicitTargets(argv);
@@ -145,6 +169,7 @@ if (require.main === module) {
 
 module.exports = {
   main,
+  printUsage,
   resolveMode,
   resolveMaxIssueArgs,
   resolveSummaryArgs,

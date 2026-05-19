@@ -23,9 +23,32 @@ Gates are not approval checkpoints by default. If there is no real blocker, the 
 
 | Size | Use When | Extra Requirement |
 | ---- | -------- | ----------------- |
-| `tiny` | Single-file wording, style, or local config changes | Still output Requirement and Design gates |
+| `tiny` | Single-file wording, style, or local config changes | May collapse Requirement + Design into one short gate (see Tiny Task Shortcut below) |
 | `normal` | Regular bugs, features, refactors, or UI changes | Read relevant rules before implementation |
 | `long-running` | Repository structure, workspace, migration, or multi-stage remediation | Create `docs/operations/<initiative>/` docs before implementation |
+
+### Tiny Task Shortcut
+
+For tiny tasks, the agent may collapse Requirement and Design into a single combined gate to avoid ceremony:
+
+```text
+Task type
+Tiny
+
+Scope gate
+- Goal: fix typo in error message in src/api/auth.js
+- Approach: change one string literal, no behavior change
+- Verification: visual diff
+```
+
+This shortcut applies only when ALL of these hold:
+
+- Single-file change with clear scope
+- No risk of cross-module impact
+- No new external dependencies or interfaces
+- Verification is trivial (read-the-diff or build pass)
+
+If any of those don't hold, fall back to separate Requirement + Design gates.
 
 ## Execution Model
 

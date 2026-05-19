@@ -343,6 +343,93 @@ function checkDeliveryContinuationCloseout(relativePath, content) {
   ];
 }
 
+function checkProfilePathReferences(relativePath, content, baseDir) {
+  const normalized = normalizePath(relativePath);
+  // Only check profile.md files in harness/project/ or root
+  if (
+    normalized !== 'harness/project/profile.md' &&
+    normalized !== 'profile.md'
+  ) {
+    return [];
+  }
+
+  // Extract paths from inline code blocks (`path/to/file`) that look like file paths
+  // A "path" here means: contains a slash AND ends with a known extension OR has no extension and looks like a directory
+  const pathPattern = /`([a-zA-Z0-9_./-]+\/[a-zA-Z0-9_./-]+)`/g;
+  const referencedPaths = new Set();
+  let match;
+  while ((match = pathPattern.exec(content)) !== null) {
+    const candidate = match[1];
+    // Skip anything that looks like a URL fragment, glob, or template placeholder
+    if (candidate.includes('*') || candidate.includes('<') || candidate.includes('>')) {
+      continue;
+    }
+    referencedPaths.add(candidate);
+  }
+
+  const issues = [];
+  for (const refPath of referencedPaths) {
+    const fullPath = path.resolve(baseDir, refPath);
+    if (!fs.existsSync(fullPath)) {
+      issues.push(
+        buildIssue(
+          'profile-stale-path',
+          relativePath,
+          `referenced path does not exist: ${refPath}`
+        )
+      );
+    }
+  }
+
+  return issues;
+}
+
+function checkDeliveryGateRequiresPriorGates(relativePath, content) {
+  // Check that if a Delivery gate is present, Requirement and Design gates are also present.
+  // Skip files that are gate templates / process docs themselves.
+  const normalized = normalizePath(relativePath);
+  if (
+    normalized.startsWith('gates/') ||
+    normalized.startsWith('harness/core/gates/') ||
+    normalized.startsWith('templates/') ||
+    normalized.startsWith('harness/core/templates/') ||
+    normalized.startsWith('docs/') ||
+    normalized.startsWith('harness/core/docs/') ||
+    normalized.startsWith('examples/') ||
+    normalized.startsWith('harness/core/examples/') ||
+    normalized.endsWith('AGENTS.template.md') ||
+    normalized.endsWith('AGENTS.md') ||
+    normalized.endsWith('README.md') ||
+    normalized.endsWith('README.zh-CN.md')
+  ) {
+    return [];
+  }
+
+  if (!/\bDelivery gate\b|交付 gate|交付门/i.test(content)) {
+    return [];
+  }
+
+  // Allow combined Scope gate (tiny task shortcut) to count as Requirement+Design
+  const hasRequirement = /\b(Requirement|Bug|Feature|Refactor|Cross-module|UI|Scope)\s+gate\b|需求 gate|需求门/i.test(content);
+  const hasDesign = /\bDesign\s+gate\b|设计 gate|设计门|\bScope\s+gate\b/i.test(content);
+
+  const missing = [];
+  if (!hasRequirement) missing.push('missing Requirement gate');
+  if (!hasDesign) missing.push('missing Design gate');
+
+  if (missing.length === 0) {
+    return [];
+  }
+
+  return [
+    buildIssue(
+      'delivery-without-prior-gates',
+      relativePath,
+      `Delivery gate present without prior process gates: ${missing.join(', ')}`
+    ),
+  ];
+}
+
 function checkFile(filePath, baseDir) {
   const relativePath = normalizePath(path.relative(baseDir, filePath));
   const content = fs.readFileSync(filePath, 'utf8');
@@ -359,6 +446,8 @@ function checkFile(filePath, baseDir) {
     ...checkOperationDocLocation(relativePath, content),
     ...checkCloseoutTargetTypes(relativePath, content),
     ...checkDeliveryContinuationCloseout(relativePath, content),
+    ...checkProfilePathReferences(relativePath, content, baseDir),
+    ...checkDeliveryGateRequiresPriorGates(relativePath, content),
   ];
 }
 

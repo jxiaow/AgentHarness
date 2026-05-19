@@ -483,6 +483,135 @@ final closeout 前必须先判定当前目标类型：
     expect(result.status).toBe(0);
   });
 
+  it('flags profile.md when it references non-existent paths', () => {
+    writeFixture(
+      'harness/project/profile.md',
+      `# Project Profile
+
+## Module Placement
+
+- New views go in \`src/views/\`
+- New routes go in \`apps/sync-server/routes/\`
+
+## High-Risk Changes
+
+- \`src/nonexistent/critical.js\`
+`
+    );
+    writeFixture('src/views/.gitkeep', '');
+    writeFixture('apps/sync-server/routes/.gitkeep', '');
+
+    const result = runCheck('harness/project/profile.md');
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('profile-stale-path');
+    expect(result.stdout).toContain('src/nonexistent/critical.js');
+  });
+
+  it('does not flag profile.md when all referenced paths exist', () => {
+    writeFixture(
+      'harness/project/profile.md',
+      `# Project Profile
+
+## Module Placement
+
+- New views go in \`src/views/\`
+- New routes go in \`src/routes/\`
+`
+    );
+    writeFixture('src/views/.gitkeep', '');
+    writeFixture('src/routes/.gitkeep', '');
+
+    const result = runCheck('harness/project/profile.md');
+
+    expect(result.status).toBe(0);
+  });
+
+  it('flags Delivery gate output without prior Requirement and Design gates', () => {
+    writeFixture(
+      'task-output.md',
+      `# Task Output
+
+Delivery gate
+- Result: completed
+- Verified: build pass
+`
+    );
+
+    const result = runCheck('task-output.md');
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('delivery-without-prior-gates');
+    expect(result.stdout).toContain('Requirement gate');
+    expect(result.stdout).toContain('Design gate');
+  });
+
+  it('passes Delivery gate output when Requirement and Design gates are present', () => {
+    writeFixture(
+      'task-output.md',
+      `# Task Output
+
+Requirement gate
+- Goal: fix bug
+
+Design gate
+- Approach: change one line
+
+Delivery gate
+- Result: completed
+- Verified: build pass
+- Unverified: none
+- Risk: none beyond covered
+`
+    );
+
+    const result = runCheck('task-output.md');
+
+    expect(result.status).toBe(0);
+  });
+
+  it('accepts Scope gate (tiny task shortcut) as both Requirement and Design', () => {
+    writeFixture(
+      'tiny-task.md',
+      `# Tiny Task
+
+Scope gate
+- Goal: fix typo
+- Approach: change one string
+- Verification: visual diff
+
+Delivery gate
+- Result: typo fixed
+- Verified: visual diff
+- Unverified: none
+- Risk: none
+`
+    );
+
+    const result = runCheck('tiny-task.md');
+
+    expect(result.status).toBe(0);
+  });
+
+  it('does not flag gate template files for delivery-without-prior-gates', () => {
+    writeFixture(
+      'gates/delivery-gate.md',
+      `# Delivery Gate
+
+This file describes Delivery gate without needing prior gates because it IS the template.
+
+- continuation：用户只说"继续 / 开始 / 接着做 / 按计划执行"时继承上一个活动阶段目标。
+- 若使用执行板或 checklist，已读取它并确认无下一可执行动作。
+- 不能把工作包完成当最终完成。
+`
+    );
+
+    const result = runCheck('gates/delivery-gate.md');
+
+    // Expected: no delivery-without-prior-gates issue (it's a template, not actual output)
+    expect(result.stdout).not.toContain('delivery-without-prior-gates');
+  });
+
   it('does not flag stable change logs that mention boards or matrices', () => {
     writeFixture(
       'docs/development/changes/2026-04-23-process-closeout-checkrails.md',

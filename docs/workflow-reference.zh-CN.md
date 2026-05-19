@@ -23,9 +23,32 @@
 
 | Size | 适用场景 | 额外要求 |
 | ---- | -------- | -------- |
-| `tiny` | 单文件文案、样式或局部配置改动 | 仍要输出 Requirement 和 Design gate |
+| `tiny` | 单文件文案、样式或局部配置改动 | 可将 Requirement + Design 合并为一个简短 gate（见下文 Tiny 任务快捷方式） |
 | `normal` | 常规 bug、新功能、重构或 UI 调整 | 实现前阅读相关规则 |
 | `long-running` | 仓库结构、workspace、迁移或多阶段整改 | 实现前创建 `docs/operations/<initiative>/` 文档 |
+
+### Tiny 任务快捷方式
+
+对于 tiny 任务，可以把 Requirement 和 Design 合并为单个 Scope gate，避免不必要的仪式感：
+
+```text
+Task type
+Tiny
+
+Scope gate
+- 目标：修复 src/api/auth.js 错误信息中的拼写错误
+- 方案：改一个字符串字面量，无行为变化
+- 验证：visual diff
+```
+
+仅当以下全部满足时使用此快捷方式：
+
+- 单文件改动且范围明确
+- 无跨模块影响风险
+- 无新增外部依赖或接口
+- 验证简单（看 diff 或编译通过即可）
+
+如有任何一条不满足，回退到分别输出 Requirement + Design gate。
 
 ## 执行模型
 

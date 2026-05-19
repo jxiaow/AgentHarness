@@ -2,6 +2,25 @@
 
 This file is the main entry point for the AI/agent development workflow.
 
+## TL;DR (read this first)
+
+Before any code change, output:
+
+1. **Task type** on its own line (bug / feature / refactor / UI / cross-module)
+2. **Requirement gate** — what we're solving, what's in/out of scope
+3. **Design gate** — where to change, the risk, how to verify
+
+After implementing, output:
+
+4. **Verification gate** — what was actually run, results, what's NOT covered
+5. **Delivery gate** — only when the task is complete; never close out a single work package as the whole task
+
+Gates are process records, not approval pauses. Keep going unless there's a real blocker (needs user authorization, would damage existing work, requirement changed, or key input missing).
+
+For tiny single-file changes, you may collapse Requirement + Design into one combined "Scope gate".
+
+---
+
 - Process layer: `harness/core/` (generic, independently upgradable)
 - Project layer: `harness/project/` (current project configuration)
 

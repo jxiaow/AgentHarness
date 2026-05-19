@@ -62,4 +62,19 @@ describe('check-harness layout resolution', () => {
     expect(warnSpy[0]).toContain('Warning');
     expect(layout.processScript).toBe(path.join('harness', 'core', 'automation', 'check-process.js'));
   });
+
+  it('prints usage with --help', () => {
+    const scriptPath = path.resolve('automation/check-harness.js');
+    const result = require('child_process').spawnSync(
+      process.execPath,
+      [scriptPath, '--help'],
+      { encoding: 'utf8' }
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('Usage:');
+    expect(result.stdout).toContain('--changed');
+    expect(result.stdout).toContain('--staged');
+    expect(result.stdout).toContain('--summary');
+  });
 });
