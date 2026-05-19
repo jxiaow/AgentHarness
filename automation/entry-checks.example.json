@@ -1,0 +1,50 @@
+{
+  "rules": [
+    {
+      "name": "vue-view-router-entry",
+      "filePattern": "^apps/desktop-ui/src/views/.+\\.vue$",
+      "nameExtractor": "/([^/]+)\\.vue$",
+      "registryFile": "apps/desktop-ui/src/router/index.js",
+      "registryPatterns": ["${name}", "views/${name}.vue"],
+      "message": "New view ${name} must be registered in apps/desktop-ui/src/router/index.js"
+    },
+    {
+      "name": "sync-route-mounted",
+      "filePattern": "^apps/sync-server/src/routes/.+\\.js$",
+      "excludePattern": "^apps/sync-server/src/routes/(compat|migration|sync)/",
+      "nameExtractor": "^apps/sync-server/src/routes/([^/]+)",
+      "registryFile": "apps/sync-server/src/app/create-server.js",
+      "registryPatterns": ["/api/${name}", "/${name}", "routes/${name}", "../routes/${name}"],
+      "message": "New route ${name} must be mounted in create-server.js"
+    },
+    {
+      "name": "async-route-handler",
+      "filePattern": "^apps/sync-server/src/routes/.+\\.js$",
+      "excludePattern": "^apps/sync-server/src/routes/migration/",
+      "registryFile": "",
+      "registryPatterns": [],
+      "contentChecks": [
+        {
+          "ruleName": "async-route-handler",
+          "pattern": "\\brouter\\.(get|post|put|patch|delete)\\s*\\([^)]*async\\s*\\(",
+          "unless": "asyncHandler\\s*\\(\\s*async\\s*\\(",
+          "message": "Async route handler must be wrapped with asyncHandler"
+        }
+      ]
+    },
+    {
+      "name": "route-direct-pouchdb",
+      "filePattern": "^apps/sync-server/src/routes/.+\\.js$",
+      "excludePattern": "^apps/sync-server/src/routes/migration/",
+      "registryFile": "",
+      "registryPatterns": [],
+      "contentChecks": [
+        {
+          "ruleName": "route-direct-pouchdb",
+          "pattern": "require\\(['\"]pouchdb['\"]\\)|require\\(['\"].*pouchdb-database['\"]\\)",
+          "message": "Route layer should not directly require PouchDB or database implementation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,27 @@
 #!/usr/bin/env node
 
+/**
+ * Project entry check — configuration-driven.
+ *
+ * This script checks that new entry points (views, routes, pages, etc.) are
+ * properly registered in the project's entry files. It loads check rules from
+ * a configuration file so it stays generic and portable across projects.
+ *
+ * Configuration file: harness/project/entry-checks.json (or --config <path>)
+ *
+ * Each rule in the config defines:
+ * - name: rule identifier
+ * - filePattern: regex to match candidate files (relative path)
+ * - excludePattern: (optional) regex to exclude certain paths
+ * - registryFile: path to the file where entries should be registered
+ * - registryPatterns: array of patterns to search in the registry file (uses ${name} as placeholder)
+ * - contentChecks: (optional) array of content-based checks on the matched file itself
+ *   - pattern: regex that triggers the issue (if matched, issue is raised)
+ *   - unless: (optional) regex that suppresses the issue if also matched
+ *   - message: issue message
+ *   - ruleName: rule identifier for this content check
+ */
+
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -16,143 +38,148 @@ function buildIssue(rule, file, message) {
   return { rule, file, message };
 }
 
-function getViewName(relativePath) {
-  return path.basename(relativePath, '.vue');
+function loadConfig(configPath) {
+  if (!fs.existsSync(configPath)) {
+    return null;
+  }
+
+  const content = fs.readFileSync(configPath, 'utf8');
+  try {
+    return JSON.parse(content);
+  } catch (error) {
+    console.error(`Failed to parse entry-checks config: ${configPath}`);
+    console.error(`  ${error.message}`);
+    process.exit(1);
+  }
 }
 
-function isDesktopView(relativePath) {
-  return /^apps\/desktop-ui\/src\/views\/.+\.vue$/.test(relativePath);
+function resolveConfigPath(argv, baseDir) {
+  const index = argv.indexOf('--config');
+  if (index !== -1 && argv[index + 1]) {
+    return path.resolve(baseDir, argv[index + 1]);
+  }
+
+  // Try consumer layout first, then core-local layout
+  const consumerPath = path.resolve(baseDir, 'harness/project/entry-checks.json');
+  if (fs.existsSync(consumerPath)) {
+    return consumerPath;
+  }
+
+  return null;
 }
 
-function isSyncRoute(relativePath) {
-  return (
-    /^apps\/sync-server\/src\/routes\/.+\.js$/.test(relativePath) ||
-    /^apps\/sync-server\/src\/routes\/.+\/index\.js$/.test(relativePath) ||
-    /^apps\/sync-server\/routes\/auth\.js$/.test(relativePath) ||
-    /^apps\/sync-server\/routes\/data\/.+\.js$/.test(relativePath)
-  );
+function isEntryCheckCandidate(relativePath, config) {
+  if (!config || !config.rules) {
+    return false;
+  }
+
+  return config.rules.some(rule => {
+    const fileRegex = new RegExp(rule.filePattern);
+    if (!fileRegex.test(relativePath)) {
+      return false;
+    }
+    if (rule.excludePattern && new RegExp(rule.excludePattern).test(relativePath)) {
+      return false;
+    }
+    return true;
+  });
 }
 
-function isEntryCheckCandidate(relativePath) {
-  return isDesktopView(relativePath) || isSyncRoute(relativePath);
+function getEntryName(relativePath, rule) {
+  if (rule.nameExtractor) {
+    const match = relativePath.match(new RegExp(rule.nameExtractor));
+    if (match) {
+      return match[1];
+    }
+  }
+
+  const ext = path.extname(relativePath);
+  return path.basename(relativePath, ext);
 }
 
-function getRouteName(relativePath) {
-  const normalized = normalizePath(relativePath);
-  const srcMatch = normalized.match(/^apps\/sync-server\/src\/routes\/([^/]+)/);
-  if (srcMatch) {
-    return srcMatch[1];
+function checkRegistryEntry(relativePath, baseDir, rule) {
+  // Skip registry check if no registry file or patterns are defined
+  if (!rule.registryFile || !rule.registryPatterns || rule.registryPatterns.length === 0) {
+    return [];
   }
 
-  return path.basename(normalized, '.js');
+  const fileRegex = new RegExp(rule.filePattern);
+  if (!fileRegex.test(relativePath)) {
+    return [];
+  }
+
+  if (rule.excludePattern && new RegExp(rule.excludePattern).test(relativePath)) {
+    return [];
+  }
+
+  const entryName = getEntryName(relativePath, rule);
+  const registryPath = path.join(baseDir, rule.registryFile);
+  const registryContent = readIfExists(registryPath);
+
+  const isRegistered = rule.registryPatterns.some(pattern => {
+    const resolvedPattern = pattern.replace(/\$\{name\}/g, entryName);
+    return registryContent.includes(resolvedPattern);
+  });
+
+  if (isRegistered) {
+    return [];
+  }
+
+  const message = (rule.message || `New entry ${entryName} must be registered in ${rule.registryFile}`)
+    .replace(/\$\{name\}/g, entryName);
+
+  return [buildIssue(rule.name, relativePath, message)];
 }
 
-function checkVueViewRouterEntry(relativePath, baseDir) {
-  if (!isDesktopView(relativePath)) {
+function checkContentRules(relativePath, content, rule) {
+  const fileRegex = new RegExp(rule.filePattern);
+  if (!fileRegex.test(relativePath)) {
     return [];
   }
 
-  const viewName = getViewName(relativePath);
-  const routerPath = path.join(baseDir, 'apps/desktop-ui/src/router/index.js');
-  const routerContent = readIfExists(routerPath);
-
-  if (routerContent.includes(viewName) || routerContent.includes(`views/${viewName}.vue`)) {
+  if (rule.excludePattern && new RegExp(rule.excludePattern).test(relativePath)) {
     return [];
   }
 
-  return [
-    buildIssue(
-      'vue-view-router-entry',
-      relativePath,
-      `New view ${viewName} must be registered in apps/desktop-ui/src/router/index.js`
-    ),
-  ];
+  if (!rule.contentChecks) {
+    return [];
+  }
+
+  const issues = [];
+  for (const check of rule.contentChecks) {
+    const pattern = new RegExp(check.pattern, check.flags || 's');
+    if (!pattern.test(content)) {
+      continue;
+    }
+
+    if (check.unless) {
+      const unlessPattern = new RegExp(check.unless, check.unlessFlags || 's');
+      if (unlessPattern.test(content)) {
+        continue;
+      }
+    }
+
+    issues.push(buildIssue(check.ruleName || rule.name, relativePath, check.message));
+  }
+
+  return issues;
 }
 
-function checkSyncRouteMounted(relativePath, baseDir) {
-  if (!isSyncRoute(relativePath)) {
-    return [];
-  }
-
-  if (/^apps\/sync-server\/src\/routes\/(compat|migration|sync)\//.test(relativePath)) {
-    return [];
-  }
-
-  const routeName = getRouteName(relativePath);
-  const createServerContent = readIfExists(
-    path.join(baseDir, 'apps/sync-server/src/app/create-server.js')
-  );
-  const entryContent = createServerContent;
-
-  if (
-    entryContent.includes(`/api/${routeName}`) ||
-    entryContent.includes(`/${routeName}`) ||
-    entryContent.includes(`routes/${routeName}`) ||
-    entryContent.includes(`../routes/${routeName}`) ||
-    entryContent.includes(`../../../routes/${routeName}`)
-  ) {
-    return [];
-  }
-
-  return [
-    buildIssue(
-      'sync-route-mounted',
-      relativePath,
-      `New route ${routeName} must be mounted in create-server.js`
-    ),
-  ];
-}
-
-function checkAsyncRouteHandler(relativePath, content) {
-  if (!isSyncRoute(relativePath)) {
-    return [];
-  }
-
-  if (/^apps\/sync-server\/src\/routes\/migration\//.test(relativePath)) {
-    return [];
-  }
-
-  if (!/\brouter\.(get|post|put|patch|delete)\s*\([^)]*async\s*\(/s.test(content)) {
-    return [];
-  }
-
-  if (/asyncHandler\s*\(\s*async\s*\(/s.test(content)) {
-    return [];
-  }
-
-  return [
-    buildIssue('async-route-handler', relativePath, 'Async route handler must be wrapped with asyncHandler'),
-  ];
-}
-
-function checkDirectPouchDb(relativePath, content) {
-  if (!isSyncRoute(relativePath)) {
-    return [];
-  }
-
-  if (/^apps\/sync-server\/src\/routes\/migration\//.test(relativePath)) {
-    return [];
-  }
-
-  if (!/require\(['"]pouchdb['"]\)|require\(['"].*pouchdb-database['"]\)/.test(content)) {
-    return [];
-  }
-
-  return [
-    buildIssue('route-direct-pouchdb', relativePath, 'Route layer should not directly require PouchDB or database implementation'),
-  ];
-}
-
-function checkFile(filePath, baseDir) {
+function checkFile(filePath, baseDir, config) {
   const relativePath = normalizePath(path.relative(baseDir, filePath));
   const content = readIfExists(filePath);
+  const issues = [];
 
-  return [
-    ...checkVueViewRouterEntry(relativePath, baseDir),
-    ...checkSyncRouteMounted(relativePath, baseDir),
-    ...checkAsyncRouteHandler(relativePath, content),
-    ...checkDirectPouchDb(relativePath, content),
-  ];
+  if (!config || !config.rules) {
+    return issues;
+  }
+
+  for (const rule of config.rules) {
+    issues.push(...checkRegistryEntry(relativePath, baseDir, rule));
+    issues.push(...checkContentRules(relativePath, content, rule));
+  }
+
+  return issues;
 }
 
 function parseFiles(argv) {
@@ -255,10 +282,11 @@ function printUsage() {
   );
   console.log('Usage: node harness/core/automation/check-entry.js --changed');
   console.log('Usage: node harness/core/automation/check-entry.js --staged');
+  console.log('Option: --config <path> specify entry-checks config file');
   console.log('Option: --max-issues <n> limit issue output count, default 5');
   console.log('Option: --summary only output counts aggregated by rule');
   console.log(
-    'Example: node harness/core/automation/check-entry.js --files apps/desktop-ui/src/views/Foo.vue'
+    'Example: node harness/core/automation/check-entry.js --files src/views/Foo.vue'
   );
 }
 
@@ -299,14 +327,21 @@ function writeReport(reportPath, payload) {
 
 function run(argv, options = {}) {
   const baseDir = options.baseDir || process.cwd();
+  const configPath = resolveConfigPath(argv, baseDir);
+  const config = configPath ? loadConfig(configPath) : null;
+
+  if (!config) {
+    return { files: [], issues: [], noConfig: true };
+  }
+
   const relativeFiles = resolveTargetFiles(argv, baseDir);
   const files = relativeFiles
     .map(file => path.resolve(baseDir, file))
     .filter(file => fs.existsSync(file))
-    .filter(file => isEntryCheckCandidate(normalizePath(path.relative(baseDir, file))));
-  const issues = files.flatMap(file => checkFile(file, baseDir));
+    .filter(file => isEntryCheckCandidate(normalizePath(path.relative(baseDir, file)), config));
+  const issues = files.flatMap(file => checkFile(file, baseDir, config));
 
-  return { files, issues };
+  return { files, issues, noConfig: false };
 }
 
 function main() {
@@ -316,10 +351,17 @@ function main() {
   }
 
   const argv = process.argv.slice(2);
-  const { files, issues } = run(argv);
+  const { files, issues, noConfig } = run(argv);
+
+  if (noConfig) {
+    console.log('No entry check config found (skipping entry checks)');
+    process.exit(0);
+  }
+
   const maxIssues = parseMaxIssues(argv);
   const summary = hasSummary(argv);
   const reportPath = parseReportPath(argv);
+
   if (files.length === 0) {
     if (argv.includes('--changed') || argv.includes('--staged') || parseFiles(argv).length > 0) {
       console.log('No entry check issues found (no checkable changed files)');
@@ -331,7 +373,7 @@ function main() {
   }
 
   if (issues.length === 0) {
-    console.log(`No entry check issues found(scanned ${files.length} files)`);
+    console.log(`No entry check issues found (scanned ${files.length} files)`);
     process.exit(0);
   }
 
@@ -356,6 +398,8 @@ module.exports = {
   checkFile,
   collectGitChangedFiles,
   isEntryCheckCandidate,
+  loadConfig,
+  resolveConfigPath,
   parseMaxIssues,
   parseReportPath,
   hasSummary,

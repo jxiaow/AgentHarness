@@ -7,8 +7,9 @@ This directory contains process checks, entry checks, and rule-to-automation map
 | File | Purpose |
 | --- | --- |
 | `check-process.js` | Harness core process check (Markdown structure, gate conventions) |
-| `check-entry.js` | Project entry check (route mounting, view registration, asyncHandler) |
+| `check-entry.js` | Project entry check (configuration-driven; loads rules from `harness/project/entry-checks.json`) |
 | `check-harness.js` | Combined check (runs process + entry sequentially) |
+| `entry-checks.example.json` | Example configuration for entry checks |
 | `rule-to-check-map.md` | Rule-to-automation mapping reference |
 
 ## Quick Use
@@ -26,6 +27,23 @@ node harness/core/automation/check-process.js --summary --max-issues 3 <path>
 # Full check
 node harness/core/automation/check-process.js
 ```
+
+## Entry Check Configuration
+
+Entry checks are project-specific and driven by a JSON config file. Place your config at `harness/project/entry-checks.json` or pass `--config <path>`.
+
+Each rule defines:
+
+- `name` — rule identifier
+- `filePattern` — regex matching candidate file paths
+- `excludePattern` — (optional) regex to exclude certain paths
+- `nameExtractor` — (optional) regex with capture group to extract the entry name
+- `registryFile` — path to the file where entries should be registered
+- `registryPatterns` — patterns to search in the registry (use `${name}` as placeholder)
+- `message` — issue message (use `${name}` as placeholder)
+- `contentChecks` — (optional) content-based checks on the file itself
+
+See `entry-checks.example.json` for a complete example.
 
 ## Cost Control
 

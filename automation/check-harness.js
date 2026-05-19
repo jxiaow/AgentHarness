@@ -1,12 +1,49 @@
 #!/usr/bin/env node
 
 const path = require('path');
+const fs = require('fs');
 const { spawnSync } = require('child_process');
 
-const rootDir = path.resolve(__dirname, '../../..');
 const defaultReportPath = '.tmp/harness-check-report.json';
 
-function runNodeScript(scriptPath, args = []) {
+function hasHarnessScripts(rootDir, processScript, entryScript) {
+  return fs.existsSync(path.join(rootDir, processScript)) && fs.existsSync(path.join(rootDir, entryScript));
+}
+
+function resolveHarnessLayout(automationDir = __dirname) {
+  const consumerRoot = path.resolve(automationDir, '../../..');
+  const consumerProcessScript = path.join('harness', 'core', 'automation', 'check-process.js');
+  const consumerEntryScript = path.join('harness', 'core', 'automation', 'check-entry.js');
+  if (hasHarnessScripts(consumerRoot, consumerProcessScript, consumerEntryScript)) {
+    return {
+      rootDir: consumerRoot,
+      processScript: consumerProcessScript,
+      entryScript: consumerEntryScript,
+    };
+  }
+
+  const coreRoot = path.resolve(automationDir, '..');
+  const coreProcessScript = path.join('automation', 'check-process.js');
+  const coreEntryScript = path.join('automation', 'check-entry.js');
+  if (hasHarnessScripts(coreRoot, coreProcessScript, coreEntryScript)) {
+    return {
+      rootDir: coreRoot,
+      processScript: coreProcessScript,
+      entryScript: coreEntryScript,
+    };
+  }
+
+  console.warn(
+    `Warning: could not locate harness scripts in expected layout; falling back to consumer root: ${consumerRoot}`
+  );
+  return {
+    rootDir: consumerRoot,
+    processScript: consumerProcessScript,
+    entryScript: consumerEntryScript,
+  };
+}
+
+function runNodeScript(rootDir, scriptPath, args = []) {
   const commandLabel = ['node', scriptPath, ...args].join(' ');
   console.log(`> ${commandLabel}`);
 
@@ -64,15 +101,13 @@ function resolveExplicitTargets(argv) {
 }
 
 function main() {
+  const layout = resolveHarnessLayout();
   const argv = process.argv.slice(2);
   const explicitTargets = argv.includes('--staged') ? [] : resolveExplicitTargets(argv);
   const mode = resolveMode(argv);
   const maxIssueArgs = resolveMaxIssueArgs(argv);
   const summaryArgs = resolveSummaryArgs(argv);
   const reportArgs = resolveReportArgs(argv);
-
-  const processScript = path.join('harness', 'core', 'automation', 'check-process.js');
-  const entryScript = path.join('harness', 'core', 'automation', 'check-entry.js');
 
   const processArgs =
     explicitTargets.length > 0
@@ -85,12 +120,12 @@ function main() {
       : [mode, ...summaryArgs, ...maxIssueArgs, ...reportArgs];
 
   const checks = [
-    [processScript, processArgs],
-    [entryScript, entryArgs],
+    [layout.processScript, processArgs],
+    [layout.entryScript, entryArgs],
   ];
 
   for (const [script, args] of checks) {
-    const status = runNodeScript(script, args);
+    const status = runNodeScript(layout.rootDir, script, args);
     if (status !== 0) {
       process.exit(status);
     }
@@ -110,5 +145,6 @@ module.exports = {
   resolveSummaryArgs,
   resolveReportArgs,
   resolveExplicitTargets,
+  resolveHarnessLayout,
   runNodeScript,
 };

@@ -43,7 +43,7 @@ function parseArgs(argv) {
       options.initiative = normalizeInitiative(value);
       continue;
     }
-    throw new Error(`Unknown argument：${value}`);
+    throw new Error(`Unknown argument: ${value}`);
   }
 
   if (!options.help && !options.initiative) {

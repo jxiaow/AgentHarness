@@ -4,7 +4,7 @@ import path from 'path';
 import { spawnSync } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const scriptPath = path.resolve('harness/core/operations/create-operation-docs.js');
+const scriptPath = path.resolve('operations/create-operation-docs.js');
 
 let tempDir;
 
@@ -47,7 +47,7 @@ describe('create-operation-docs script', () => {
     const result = runCreateOperationDocs('existing', '--dir', operationsDir);
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('目标目录已存在');
+    expect(result.stderr).toContain('Target directory already exists');
   });
 
   it('prints usage for help', () => {

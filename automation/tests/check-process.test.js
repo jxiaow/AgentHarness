@@ -4,7 +4,7 @@ import path from 'path';
 import { spawnSync } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const scriptPath = path.resolve('harness/core/automation/check-process.js');
+const scriptPath = path.resolve('automation/check-process.js');
 
 let tempDir;
 
@@ -45,9 +45,9 @@ final closeout
 
     expect(result.status).toBe(1);
     expect(result.stdout).toContain('final-closeout-evidence');
-    expect(result.stdout).toContain('缺少验证');
-    expect(result.stdout).toContain('缺少未验证');
-    expect(result.stdout).toContain('缺少风险');
+    expect(result.stdout).toContain('missing verification');
+    expect(result.stdout).toContain('missing unverified');
+    expect(result.stdout).toContain('missing risk');
   });
 
   it('passes final closeout when result, verification, unverified items, and risk are present', () => {
@@ -66,7 +66,7 @@ final closeout
     const result = runCheck('delivery.md');
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('未发现流程检查问题');
+    expect(result.stdout).toContain('No process check issues found');
   });
 
   it('fails when final closeout appears while work is still in progress', () => {
@@ -228,9 +228,9 @@ Requirement gate：范围明确。Design gate：改文档。Implementation gate�
 
     expect(result.status).toBe(1);
     expect(result.stdout).toContain('long-running-plan');
-    expect(result.stdout).toContain('缺少阶段级 checklist');
-    expect(result.stdout).toContain('缺少执行顺序');
-    expect(result.stdout).toContain('缺少当前工作包');
+    expect(result.stdout).toContain('missing stage-level checklist');
+    expect(result.stdout).toContain('missing execution order');
+    expect(result.stdout).toContain('missing current work package');
   });
 
   it('fails operation-state documents placed under docs/development', () => {
@@ -269,8 +269,8 @@ Requirement gate：范围明确。Design gate：改文档。Implementation gate�
     });
 
     expect(result.status).toBe(1);
-    expect(result.stdout).toContain('发现 2 个流程检查问题');
-    expect(result.stdout).toContain('另有 1 个问题未显示');
+    expect(result.stdout).toContain('Found 2 process check issue(s)');
+    expect(result.stdout).toContain('Another 1 issue(s) not shown');
   });
 
   it('prints only rule counts with --summary', () => {
@@ -310,7 +310,7 @@ Requirement gate：范围明确。Design gate：改文档。Implementation gate�
     );
 
     expect(result.status).toBe(1);
-    expect(result.stdout).toContain('详细报告');
+    expect(result.stdout).toContain('Detailed report');
 
     const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
     expect(report.filesScanned).toBe(1);
@@ -500,9 +500,7 @@ This change explains why an execution board can prevent early closeout.
   it('is exposed as the process:check npm script', () => {
     const packageJson = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));
 
-    expect(packageJson.scripts['process:check']).toBe(
-      'node harness/core/automation/check-process.js'
-    );
+    expect(packageJson.scripts['process:check']).toBe('node automation/check-process.js');
   });
 
   it('documents changed and staged modes in help output', () => {
@@ -514,5 +512,42 @@ This change explains why an execution board can prevent early closeout.
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('--changed');
     expect(result.stdout).toContain('--staged');
+  });
+
+  it('checks delivery gate continuation constraints in core-local path', () => {
+    writeFixture(
+      'gates/delivery-gate.md',
+      `# Delivery Gate
+
+## Final Closeout Conditions
+
+- single-task
+- staged/ongoing
+- explicit-closeout
+`
+    );
+
+    const result = runCheck('gates/delivery-gate.md');
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('delivery-continuation-closeout');
+  });
+
+  it('passes delivery gate in core-local path when constraints are present', () => {
+    writeFixture(
+      'gates/delivery-gate.md',
+      `# Delivery Gate
+
+## Final Closeout Conditions
+
+- continuation：用户只说"继续 / 开始 / 接着做 / 按计划执行"时继承上一个活动阶段目标。
+- 若使用执行板或 checklist，已读取它并确认无下一可执行动作。
+- 不能把工作包完成当最终完成。
+`
+    );
+
+    const result = runCheck('gates/delivery-gate.md');
+
+    expect(result.status).toBe(0);
   });
 });

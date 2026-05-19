@@ -1,0 +1,15 @@
+{
+  "name": "agent-harness",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "harness:test": "vitest run",
+    "process:check": "node automation/check-process.js",
+    "harness:check": "node automation/check-harness.js",
+    "harness:ops:init": "node operations/create-operation-docs.js"
+  },
+  "devDependencies": {
+    "vitest": "1.6.1"
+  }
+}

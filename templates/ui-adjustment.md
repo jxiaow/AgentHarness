@@ -48,20 +48,20 @@ The following situations do NOT require pausing; proceed with Autopilot:
 
 ## Required References
 
-- Before UI design, visual refactoring, or component style adjustments, always reference `docs/design/design-system.md`
-- Theme variables and state styles follow `harness/project/rules/theme-patterns.md`
+- Before UI design, visual refactoring, or component style adjustments, reference the project's design system documentation if it exists (e.g. `docs/design/design-system.md`)
+- Theme variables and state styles follow the project's theme rules if defined (e.g. `harness/project/rules/theme-patterns.md`)
 
 ## Design System Sync (auto-triggered)
 
-When UI adjustments involve any of the following, the corresponding design system section under `docs/design/` **must** be synced before Delivery gate:
+When UI adjustments involve any of the following, the corresponding design system documentation **must** be synced before Delivery gate (if the project maintains design system docs under `docs/design/`):
 
 | Trigger | Sync target |
 | --- | --- |
-| Modifying public component (BaseSelect, BaseButton, BaseModal, etc.) interaction or visual spec | `design-system-controls.md` |
-| Adding/modifying layout patterns or spacing rules | `design-system-layout.md` |
-| Adding/modifying feedback component (Toast, Alert, Loading, etc.) behavior | `design-system-feedback.md` |
-| Adding/modifying form control behavior or states | `design-system-forms.md` or `design-system-controls.md` |
-| Adding/modifying theme variables | `design-system-foundations.md` + `variables.css` |
+| Modifying public component interaction or visual spec | design system controls doc |
+| Adding/modifying layout patterns or spacing rules | design system layout doc |
+| Adding/modifying feedback component behavior | design system feedback doc |
+| Adding/modifying form control behavior or states | design system forms or controls doc |
+| Adding/modifying theme variables | design system foundations + variables file |
 
 Rules:
 
