@@ -45,7 +45,7 @@ Test failure triage
 - Fix direction: fix test / fix implementation / fix fixture
 ```
 
-## Delivery Rule
+## Closeout Rule
 
 "Tests still need syncing", "test contracts not yet fixed", "there are still runnable verifications" are not residual risk — they are actionable items.
 

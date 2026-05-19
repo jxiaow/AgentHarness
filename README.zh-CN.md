@@ -1,6 +1,6 @@
 # agent-harness
 
-agent-harness 是一个给 AI coding agent 使用的可移植流程层。它让 agent 在直接动手改代码之前，先说明需求、选择设计方案、在项目规则内实现、验证结果，并输出清晰的交付收口。
+agent-harness 是一个给 AI coding agent 使用的可移植流程层。它让 agent 在直接动手改代码之前，先明确范围和方案，实现后记录验证结果和风险——而不是跳过思考直接改代码。
 
 适合在真实仓库里使用 Codex、Claude Code、Kiro、Gemini CLI、Cursor 或自定义 coding agent 的团队。
 
@@ -41,7 +41,7 @@ Scope → [Plan] → Build → Close
 ## 你会得到什么
 
 - **任务模板** — 覆盖 bug 修复、新功能、重构、UI 调整和跨模块改动。
-- **阶段 gate** — 强制 agent 记录范围、设计、实现、验证和交付。
+- **阶段 gate** — 强制 agent 记录范围、改动和验证结果。
 - **Autopilot 规则** — gate 是过程记录，不是审批暂停点。
 - **项目适配层** — 记录仓库事实、高风险路径和本地规则。
 - **运行态文档** — 承接长周期迁移和整改工作。

@@ -1,6 +1,6 @@
 # agent-harness
 
-A portable process layer for AI coding agents. It makes agents state requirements, choose a design, implement within project rules, verify the result, and deliver a clear closeout — instead of jumping straight into edits.
+A portable process layer for AI coding agents. It makes agents define scope and approach before editing, then record what was verified and what wasn't — instead of jumping straight into code.
 
 For teams using Codex, Claude Code, Kiro, Gemini CLI, Cursor, or custom agents in real repositories.
 
@@ -41,7 +41,7 @@ The point is not ceremony — it's making agent work reviewable, recoverable, an
 ## What You Get
 
 - **Task templates** — cover bug fixes, new features, refactors, UI adjustments, and cross-module changes.
-- **Stage gates** — force the agent to record scope, design, implementation, verification, and delivery.
+- **Stage gates** — force the agent to record scope, build deltas, and verification before closing out.
 - **Autopilot rules** — gates are process records, not approval pauses.
 - **Project adaptation layer** — captures repo facts, high-risk paths, and local rules.
 - **Operations docs** — support long-running migrations and multi-stage remediation.

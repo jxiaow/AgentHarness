@@ -32,7 +32,7 @@ Classify rules in the development process harness by "degree of automation feasi
 | Requirement   | Requirement boundary clarity                    | human-ai-judgment | Depends on context understanding                             |
 | Design        | Approach reasonableness                         | human-ai-judgment | Depends on architecture trade-offs                           |
 | Verification  | Verification sufficiency                        | human-ai-judgment | Depends on task semantics                                    |
-| Process       | `in_progress` forbids `final closeout`          | semi-automatable  | Scan board status and delivery text keywords                 |
+| Process       | `in_progress` forbids `final closeout`          | semi-automatable  | Scan board status and closeout text keywords                 |
 | Process       | Incomplete must have next action or blocker     | semi-automatable  | Scan board `next action`/`block reason` fields               |
 | Process       | Closeout must have evidence anchors             | semi-automatable  | Scan result / verification command / unverified / risk       |
 | Process       | Non-blocking next steps forbidden in closeout   | semi-automatable  | Scan next-step suggestions in final closeout                 |
