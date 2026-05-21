@@ -642,6 +642,25 @@ This change explains why an execution board can prevent early closeout.
     expect(result.stdout).toContain('Default scan scope');
   });
 
+  it('defaults to core-local harness paths when run from a core checkout', () => {
+    writeFixture('automation/check-process.js', '');
+    writeFixture(
+      'gates/close-gate.md',
+      `# Close Gate
+
+## Final Closeout Conditions
+
+- single-task
+`
+    );
+
+    const result = runCheck();
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('gates/close-gate.md');
+    expect(result.stdout).toContain('close-gate-continuation');
+  });
+
   it('checks close gate continuation constraints in core-local path', () => {
     writeFixture(
       'gates/close-gate.md',

@@ -86,6 +86,40 @@ function resolveReportArgs(argv) {
   return ['--report', defaultReportPath];
 }
 
+function resolveReportPath(argv) {
+  const args = resolveReportArgs(argv);
+  const index = args.indexOf('--report');
+  return index === -1 ? null : args[index + 1];
+}
+
+function childReportPath(reportPath, label) {
+  if (!reportPath) return null;
+  const parsed = path.parse(reportPath);
+  return path.join(parsed.dir, `${parsed.name}.${label}${parsed.ext || '.json'}`);
+}
+
+function reportArgsFor(reportPath, label) {
+  const childPath = childReportPath(reportPath, label);
+  return childPath ? ['--report', childPath] : [];
+}
+
+function readReport(reportPath) {
+  if (!reportPath || !fs.existsSync(reportPath)) {
+    return null;
+  }
+  return JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+}
+
+function writeCombinedReport(reportPath, reports) {
+  if (!reportPath) {
+    return;
+  }
+
+  fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+  fs.writeFileSync(reportPath, `${JSON.stringify({ checks: reports }, null, 2)}\n`, 'utf8');
+  console.log(`Combined report: ${reportPath}`);
+}
+
 function resolveExplicitTargets(argv) {
   const targets = [];
   for (let index = 0; index < argv.length; index += 1) {
@@ -131,30 +165,37 @@ function main() {
   const mode = resolveMode(argv);
   const maxIssueArgs = resolveMaxIssueArgs(argv);
   const summaryArgs = resolveSummaryArgs(argv);
-  const reportArgs = resolveReportArgs(argv);
+  const reportPath = resolveReportPath(argv);
 
   const processArgs =
     explicitTargets.length > 0
-      ? [...explicitTargets, ...summaryArgs, ...maxIssueArgs, ...reportArgs]
-      : [mode, ...summaryArgs, ...maxIssueArgs, ...reportArgs];
+      ? [...explicitTargets, ...summaryArgs, ...maxIssueArgs, ...reportArgsFor(reportPath, 'process')]
+      : [mode, ...summaryArgs, ...maxIssueArgs, ...reportArgsFor(reportPath, 'process')];
 
   const entryArgs =
     explicitTargets.length > 0
-      ? ['--files', ...explicitTargets, ...summaryArgs, ...maxIssueArgs, ...reportArgs]
-      : [mode, ...summaryArgs, ...maxIssueArgs, ...reportArgs];
+      ? ['--files', ...explicitTargets, ...summaryArgs, ...maxIssueArgs, ...reportArgsFor(reportPath, 'entry')]
+      : [mode, ...summaryArgs, ...maxIssueArgs, ...reportArgsFor(reportPath, 'entry')];
 
   const checks = [
-    [layout.processScript, processArgs],
-    [layout.entryScript, entryArgs],
+    ['process', layout.processScript, processArgs],
+    ['entry', layout.entryScript, entryArgs],
   ];
 
   let hasFailure = false;
-  for (const [script, args] of checks) {
+  const reports = {};
+  for (const [label, script, args] of checks) {
     const status = runNodeScript(layout.rootDir, script, args);
+    const childPath = childReportPath(reportPath, label);
+    reports[label] = {
+      status,
+      ...(readReport(childPath) || { filesScanned: 0, issues: [] }),
+    };
     if (status !== 0) {
       hasFailure = true;
     }
   }
+  writeCombinedReport(reportPath, reports);
 
   if (hasFailure) {
     process.exit(1);
@@ -174,6 +215,8 @@ module.exports = {
   resolveMaxIssueArgs,
   resolveSummaryArgs,
   resolveReportArgs,
+  resolveReportPath,
+  childReportPath,
   resolveExplicitTargets,
   resolveHarnessLayout,
   runNodeScript,

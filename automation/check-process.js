@@ -511,6 +511,31 @@ function printUsage() {
   console.log('--staged scans only .md files in the staged diff');
 }
 
+function resolveDefaultTargets(baseDir) {
+  const consumerTargets = ['AGENTS.md', 'harness/core', 'harness/project', 'docs'];
+  if (fs.existsSync(path.join(baseDir, 'harness', 'core', 'automation', 'check-process.js'))) {
+    return consumerTargets;
+  }
+
+  const coreTargets = [
+    'AGENTS.template.md',
+    'README.md',
+    'README.zh-CN.md',
+    'ONBOARD.md',
+    'gates',
+    'templates',
+    'rules',
+    'docs',
+    'operations',
+    'examples',
+  ];
+  if (fs.existsSync(path.join(baseDir, 'automation', 'check-process.js'))) {
+    return coreTargets;
+  }
+
+  return consumerTargets;
+}
+
 function parseMaxIssues(argv) {
   const index = argv.indexOf('--max-issues');
   if (index === -1) {
@@ -646,7 +671,7 @@ function run(argv, options = {}) {
   } else if (argv.includes('--changed')) {
     files = collectGitChangedFiles(baseDir, 'changed').map(file => path.resolve(baseDir, file));
   } else {
-    files = ['AGENTS.md', 'harness/core', 'harness/project', 'docs'].flatMap(target =>
+    files = resolveDefaultTargets(baseDir).flatMap(target =>
       collectMarkdownFiles(path.resolve(baseDir, target))
     );
   }
@@ -692,6 +717,7 @@ module.exports = {
   checkFile,
   collectMarkdownFiles,
   collectGitChangedFiles,
+  resolveDefaultTargets,
   parseMaxIssues,
   parseReportPath,
   hasSummary,

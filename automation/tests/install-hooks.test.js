@@ -26,6 +26,27 @@ function setupRepo() {
   );
 }
 
+function setupHookSource() {
+  fs.mkdirSync(path.join(tempDir, '.githooks'), { recursive: true });
+  fs.writeFileSync(
+    path.join(tempDir, '.githooks', 'pre-commit'),
+    fs.readFileSync(path.resolve('.githooks/pre-commit'), 'utf8'),
+    'utf8'
+  );
+}
+
+function findSh() {
+  if (process.platform !== 'win32') {
+    return 'sh';
+  }
+
+  const candidates = [
+    'C:\\Program Files\\Git\\usr\\bin\\sh.exe',
+    'C:\\Program Files\\Git\\bin\\sh.exe',
+  ];
+  return candidates.find(candidate => fs.existsSync(candidate)) || 'sh';
+}
+
 describe('install-hooks script', () => {
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-hooks-'));
@@ -158,6 +179,22 @@ describe('install-hooks script', () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('Could not find harness .githooks directory');
+  });
+
+  it('pre-commit hook fails closed when check-harness.js is missing', () => {
+    spawnSync('git', ['init'], { cwd: tempDir, encoding: 'utf8' });
+    setupHookSource();
+    const result = runInstallHooks();
+    expect(result.status).toBe(0);
+
+    const hookPath = path.join(tempDir, '.git/hooks/pre-commit');
+    fs.writeFileSync(path.join(tempDir, 'staged.txt'), 'changed\n', 'utf8');
+    spawnSync('git', ['add', 'staged.txt'], { cwd: tempDir, encoding: 'utf8' });
+
+    const hookResult = spawnSync(findSh(), [hookPath], { cwd: tempDir, encoding: 'utf8' });
+
+    expect(hookResult.status).toBe(1);
+    expect(hookResult.stdout).toContain('check-harness.js not found');
   });
 
   it('supports custom --target directory', () => {

@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 const require = createRequire(import.meta.url);
 const { resolveHarnessLayout } = require('../check-harness.js');
+const scriptPath = path.resolve('automation/check-harness.js');
 
 let tempDir;
 
@@ -64,7 +65,6 @@ describe('check-harness layout resolution', () => {
   });
 
   it('prints usage with --help', () => {
-    const scriptPath = path.resolve('automation/check-harness.js');
     const result = require('child_process').spawnSync(
       process.execPath,
       [scriptPath, '--help'],
@@ -76,5 +76,51 @@ describe('check-harness layout resolution', () => {
     expect(result.stdout).toContain('--changed');
     expect(result.stdout).toContain('--staged');
     expect(result.stdout).toContain('--summary');
+  });
+
+  it('keeps process and entry details in the combined report', () => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-report-'));
+    const automationDir = path.join(tempDir, 'automation');
+    fs.mkdirSync(automationDir, { recursive: true });
+    const tempHarnessScript = path.join(automationDir, 'check-harness.js');
+    fs.copyFileSync(scriptPath, tempHarnessScript);
+    fs.writeFileSync(
+      path.join(automationDir, 'check-process.js'),
+      `#!/usr/bin/env node
+const fs = require('fs');
+const reportIndex = process.argv.indexOf('--report');
+if (reportIndex !== -1) {
+  fs.mkdirSync(require('path').dirname(process.argv[reportIndex + 1]), { recursive: true });
+  fs.writeFileSync(process.argv[reportIndex + 1], JSON.stringify({ filesScanned: 1, issues: [{ rule: 'process-rule', file: 'a.md' }] }));
+}
+process.exit(1);
+`,
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(automationDir, 'check-entry.js'),
+      `#!/usr/bin/env node
+const fs = require('fs');
+const reportIndex = process.argv.indexOf('--report');
+if (reportIndex !== -1) {
+  fs.mkdirSync(require('path').dirname(process.argv[reportIndex + 1]), { recursive: true });
+  fs.writeFileSync(process.argv[reportIndex + 1], JSON.stringify({ filesScanned: 1, issues: [{ rule: 'entry-rule', file: 'b.js' }] }));
+}
+process.exit(1);
+`,
+      'utf8'
+    );
+
+    const reportPath = path.join(tempDir, 'report.json');
+    const result = require('child_process').spawnSync(
+      process.execPath,
+      [tempHarnessScript, '--changed', '--report', reportPath],
+      { cwd: tempDir, encoding: 'utf8' }
+    );
+
+    expect(result.status).toBe(1);
+    const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+    expect(report.checks.process.issues[0].rule).toBe('process-rule');
+    expect(report.checks.entry.issues[0].rule).toBe('entry-rule');
   });
 });

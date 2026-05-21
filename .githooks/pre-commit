@@ -18,8 +18,12 @@ if [ -f "harness/core/automation/check-harness.js" ]; then
 elif [ -f "automation/check-harness.js" ]; then
   SCRIPT="automation/check-harness.js"
 else
-  echo "agent-harness: check-harness.js not found; skipping pre-commit checks"
-  exit 0
+  echo "agent-harness: check-harness.js not found; failing pre-commit checks"
+  echo "agent-harness: set AGENT_HARNESS_SKIP=1 to bypass intentionally"
+  if [ "$AGENT_HARNESS_SKIP" = "1" ]; then
+    exit 0
+  fi
+  exit 1
 fi
 
 node "$SCRIPT" --staged --summary --max-issues 3
