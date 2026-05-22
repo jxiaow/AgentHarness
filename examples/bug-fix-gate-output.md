@@ -1,6 +1,6 @@
 # Bug Fix Gate Output Example
 
-This example shows the shape of a compact bug-fix interaction with the Scope/Build/Close flow. The exact fields can vary by project, but the important behavior is stable: the agent records scope before editing, then records build deltas and verification after editing.
+This example shows the shape of a compact bug-fix interaction with the Scope/Solution/Build/Close flow. The exact fields can vary by project, but the important behavior is stable: the agent records scope and the selected solution before editing, then records build deltas and verification after editing.
 
 ## User Request
 
@@ -20,6 +20,13 @@ Scope gate
 - Boundary: do not change route names, API shape, or persisted host data.
 - Risk: host selection is shared by deploy and branch workflows.
 - Verification: targeted component/store test and manual page smoke.
+
+Solution gate
+- Target behavior: page renders the existing empty state when no host is selected.
+- Chosen solution: normalize missing-host data at the selector boundary and keep the component branch small.
+- Surface changes: none; route, API, and persisted host data stay unchanged.
+- Compatibility: existing selected-host flow keeps the same data shape.
+- Verification impact: test both selector normalization and empty-state render path.
 ```
 
 ## Agent Output After Editing

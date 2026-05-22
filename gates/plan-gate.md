@@ -2,11 +2,11 @@
 
 ## Goal
 
-For long-running tasks only, record the operational plan before implementation. Normal and tiny tasks skip this gate.
+For long-running tasks only, record the operational plan after Scope and Solution, before implementation. Normal and tiny tasks skip this gate.
 
 ## When To Use
 
-Output Plan gate after Scope gate when:
+Output Plan gate after Solution gate when:
 
 - The task spans multiple work packages, files, or modules at scale
 - The work cannot be reliably finished in one round of implementation

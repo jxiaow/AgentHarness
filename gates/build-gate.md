@@ -15,7 +15,7 @@ Use a multi-line short list, up to 4 items:
 - Changed: core change points (files / modules / functions)
 - Kept: anything explicitly preserved that someone might expect to change
 - Deviated from Scope: yes / no — if yes, explain why
-- Incomplete: anything Scope promised but Build did not deliver
+- Incomplete: anything Scope or Solution promised but Build did not deliver
 
 If Build matches Scope exactly with no deviations and no incomplete items, this gate is one line:
 
@@ -45,7 +45,7 @@ Build gate
 
 Default requirements:
 
-- Do not repeat content already in Scope gate
+- Do not repeat content already in Scope or Solution gate
 - Do not list every file — list change points, not file names
 - Do not write implementation play-by-play
 - When output alongside other gates, separate with blank lines before and after

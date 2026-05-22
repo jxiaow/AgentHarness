@@ -24,9 +24,9 @@ When using this template, fold these fields into Scope gate:
 ## Only Add When Relevant
 
 - Touches runtime bridge: add adapter / command / IPC / message boundaries
-- Touches public interface: add entry point, permission boundaries, and communication chain
+- Touches public interface: state entry point, permission boundaries, communication chain, and compatibility direction in Solution gate
 - Touches state management: add state container, cache, or persistence boundaries
-- Long-running / multi-stage: switch to long-running flow with Plan gate; create operations workspace
+- Long-running / multi-stage: switch to long-running flow with Solution + Plan gates; create operations workspace
 - A smaller entry point exists: explain why it is not used this time
 
 ## Recommended Output

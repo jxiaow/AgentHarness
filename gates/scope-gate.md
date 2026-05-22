@@ -2,7 +2,7 @@
 
 ## Goal
 
-Before implementation, state what is being solved, where it will change, what is out of scope, and how the result will be verified. This is the only pre-implementation gate.
+Before implementation, state what is being solved, where it will change, what is out of scope, and how the result will be verified. Scope bounds the problem; it does not replace Solution gate for Task-level work.
 
 ## Minimal Fields
 
@@ -65,7 +65,7 @@ Default requirements:
 
 ## Design Approval
 
-For UI redesign, full visual overhauls, or cases with multiple viable directions, pause after Scope gate to generate a previewable HTML mockup before implementation. See `templates/ui-adjustment.md` for details.
+For UI redesign, full visual overhauls, or cases with multiple viable directions, use Solution gate to make the target direction explicit before implementation. UI changes that require a previewable HTML mockup still pause for confirmation after Scope/Solution. See `templates/ui-adjustment.md` for details.
 
 ## Good / Bad
 

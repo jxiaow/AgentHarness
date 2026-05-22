@@ -31,7 +31,7 @@ AI coding agent 很有用，但它们会以可预测的方式失败：
 agent-harness 把这些失败模式收敛成一个小而可重复的工作流：
 
 ```text
-Scope → [Plan] → Build → Close
+Scope → Solution → [Plan] → Build → Close
 ```
 
 重点不是增加仪式感，而是让 agent 的工作可审阅、可恢复，并且更不容易跑偏。
@@ -41,8 +41,8 @@ Scope → [Plan] → Build → Close
 ## 你会得到什么
 
 - **任务模板** — 覆盖 bug 修复、新功能、重构、UI 调整和跨模块改动。
-- **阶段 gate** — 强制 agent 记录范围、改动和验证结果。
-- **Autopilot 规则** — gate 是过程记录，不是审批暂停点。
+- **阶段 gate** — 强制 agent 记录范围、选定方案、改动和验证结果。
+- **Autopilot 规则** — gate 默认是过程记录；未批准的公开行为变化需要明确暂停。
 - **项目适配层** — 记录仓库事实、高风险路径和本地规则。
 - **运行态文档** — 承接长周期迁移和整改工作。
 - **轻量流程检查** — 发现 Markdown 结构问题和已知 harness 规则问题。
@@ -69,6 +69,13 @@ Scope gate
 - Boundary: keep API shape and routing unchanged.
 - Expected behavior: show an actionable empty state.
 - Verification: targeted unit test and smoke path.
+
+Solution gate
+- Target behavior: missing host renders the existing empty-state component.
+- Chosen solution: normalize missing host in the selector and keep the route/API unchanged.
+- Surface changes: none.
+- Compatibility: persisted host data format stays unchanged.
+- Verification impact: selector unit test plus deployment page smoke path.
 
 Build gate
 - Changed: store selector and DeploymentStatus empty-state branch.
@@ -178,13 +185,21 @@ harness/
 ```text
 1. 声明任务类型（bug / feature / refactor / UI / cross-module）
 2. Scope gate — 解决什么、怎么改、boundary、风险、怎么验证
-3. （仅长任务）Plan gate — 运行态工作区和当前工作包
-4. 实现
-5. Build gate — 实际改了什么，是否偏离 Scope
-6. Close gate — 验证、未盖到、风险、最终结果
+3. Solution gate — 目标行为、选定方案、外部影响面、兼容性
+4. （仅长任务）Plan gate — 运行态工作区和当前工作包
+5. 实现
+6. Build gate — 实际改了什么，是否偏离 Scope/Solution
+7. Close gate — 验证、未盖到、风险、最终结果
 ```
 
-Gate 是过程记录，不是审批暂停点。agent 输出 gate 后继续推进，除非遇到真正的阻塞（需要用户授权、会覆盖已有工作、需求发生重大变化、或缺少关键输入）。
+Gate 默认是过程记录。agent 输出 gate 后继续推进，除非遇到真正的阻塞，或 Solution gate 暴露了尚未批准的公开行为方案，例如 CLI/API/输出/配置/用户流程变化。
+
+最终 Close gate 的目标类型：
+
+- `single-task` — 有边界的一次性任务已完成并验证。
+- `staged/ongoing` — 长周期阶段已经没有可执行剩余项。
+- `continuation` — 用户说"继续 / 开始 / 接着做"时，继承当前活动阶段并继续推进。
+- `explicit-closeout` — 用户明确要求停止、总结或暂停。
 
 ---
 

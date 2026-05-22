@@ -233,6 +233,21 @@ Scope gate：范围明确。Build gate：改文档。Close gate：完成。
     expect(result.stdout).toContain('missing current work package');
   });
 
+  it('fails docs that still describe the old Scope to Build flow', () => {
+    writeFixture(
+      'workflow.md',
+      `# Workflow
+
+Normal task: Scope → Build → Close
+`
+    );
+
+    const result = runCheck('workflow.md');
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('outdated-solution-gate-flow');
+  });
+
   it('fails operation-state documents placed under docs/development', () => {
     writeFixture(
       'docs/development/remediation-board.md',

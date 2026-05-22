@@ -17,7 +17,7 @@ Classify each request by **what will actually change**, not by what the user sai
 | Tier | Criteria (ALL must hold) | Process |
 | --- | --- | --- |
 | Patch | Single file, ≤15 lines changed, no interface/type/export signature change, no new dependency | Execute directly. No gate. |
-| Task | Any of: multi-file, interface change, new export, data structure change, new message/command protocol, cross-directory | Full gate flow (Scope → Build → Close) |
+| Task | Any of: multi-file, interface change, new export, data structure change, new message/command protocol, cross-directory | Full gate flow (Scope → Solution → Build → Close) |
 
 **If uncertain, it is a Task.**
 
@@ -34,7 +34,7 @@ Track cumulative session state. When **any** threshold is crossed, the current r
 | Cross-module | Changes span ≥ 2 top-level `src/` directories (e.g., `core/` + `ui/`, or `qt/` + `core/`) |
 | Data flow | A stored data format (JSON schema, config file structure) is altered |
 
-Once escalated, output a Scope gate covering the cumulative work before continuing.
+Once escalated, output Scope and Solution gates covering the cumulative work before continuing.
 
 ---
 
@@ -45,9 +45,9 @@ Once escalated, output a Scope gate covering the cumulative work before continui
 2. Assess: what files/interfaces/modules will this touch?
 3. Check tier:
    - Meets ALL Patch criteria? → Execute directly
-   - Otherwise → Task: output Scope gate, then implement
+   - Otherwise → Task: output Scope and Solution gates, then implement
 4. Check cumulative state:
-   - Any threshold crossed? → Escalate: pause, output Scope gate for cumulative work
+   - Any threshold crossed? → Escalate: pause, output Scope and Solution gates for cumulative work
 5. Proceed with implementation
 ```
 
@@ -57,7 +57,8 @@ Once escalated, output a Scope gate covering the cumulative work before continui
 
 - Classification is based on **actual change scope**, never on user phrasing or perceived urgency.
 - "The user is iterating quickly" is not a reason to skip gates. Quick iteration is exactly when scope creep happens.
-- A Patch that unexpectedly grows into multi-file during implementation must stop and retroactively output a Scope gate before continuing.
+- A Patch that unexpectedly grows into multi-file during implementation must stop and retroactively output Scope and Solution gates before continuing.
+- Scope only states the bounded problem. A Task that changes public commands, APIs, outputs, persistence, or user workflow must show the selected Solution before Build and pause if that exact direction is not already approved.
 - Cumulative escalation cannot be reset within a single conversation session.
 - Gate output remains compact (per existing output discipline). Do not use this rule as an excuse for verbose ceremony.
 
@@ -85,6 +86,13 @@ Scope gate (cumulative escalation)
 - Remaining approach: ...
 - Risk: ...
 - Verification: ...
+
+Solution gate (cumulative escalation)
+- Target behavior: ...
+- Chosen solution: ...
+- Surface changes: ...
+- Compatibility: ...
+- Verification impact: ...
 ```
 
 This is a retrospective + prospective gate: it acknowledges what was already done and scopes what remains.

@@ -24,8 +24,8 @@ When using this template, fold these fields into Scope gate:
 ## Only Add When Relevant
 
 - Involves UI: add theme, responsiveness, component or view patterns
-- Involves runtime bridge: add adapter / command / IPC / message boundaries
-- Involves public interface: add entry point, state container, composition logic, and communication chain
+- Involves runtime bridge: use Solution gate to make adapter / command / IPC / message boundaries explicit
+- Involves public interface: use Solution gate to state entry point, state container, composition logic, and communication chain before Build
 - Involves new files: add application entry, registration entry, export entry, or dependency manifest
 
 ## Recommended Output

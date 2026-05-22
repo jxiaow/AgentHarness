@@ -21,9 +21,9 @@ When using this template, fold these fields into Scope gate:
 - Verification method
 - Residual risk
 
-## Design Approval (Pause After Scope Gate)
+## Design Approval (Pause After Scope/Solution Gates)
 
-The following situations require pausing after Scope gate to generate a previewable HTML UI mockup for user confirmation; implementation is forbidden before confirmation:
+The following situations require pausing after Scope and Solution gates to generate a previewable HTML UI mockup for user confirmation; implementation is forbidden before confirmation:
 
 - User requests "redesign UI / redo interface / full overhaul / visual direction"
 - Changes affect page information architecture, core layout, visual style, or multiple core pages

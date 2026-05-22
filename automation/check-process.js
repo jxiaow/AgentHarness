@@ -251,6 +251,28 @@ function checkLongRunningPlan(relativePath, content) {
   ];
 }
 
+function checkOutdatedSolutionGateFlow(relativePath, content) {
+  const outdatedPatterns = [
+    /Scope\s*→\s*Build\s*→\s*Close/,
+    /Scope\s*→\s*\[Plan\]\s*→\s*Build\s*→\s*Close/,
+    /Scope\s*→\s*Plan\s*→\s*Build\s*→\s*Close/,
+    /Scope\/Build\/Close\s+flow/i,
+    /Scope\s+gate,\s*then\s+implement/i,
+  ];
+
+  if (!hasAny(content, outdatedPatterns)) {
+    return [];
+  }
+
+  return [
+    buildIssue(
+      'outdated-solution-gate-flow',
+      relativePath,
+      'Task flow must include Solution gate before Build'
+    ),
+  ];
+}
+
 function checkOperationDocLocation(relativePath, content) {
   const normalized = normalizePath(relativePath);
   if (!normalized.startsWith('docs/development/')) {
@@ -487,6 +509,7 @@ function checkFile(filePath, baseDir) {
     ...checkFinalCloseoutNextStepConflict(relativePath, content),
     ...checkGateOutputOneLine(relativePath, content),
     ...checkLongRunningPlan(relativePath, content),
+    ...checkOutdatedSolutionGateFlow(relativePath, content),
     ...checkOperationDocLocation(relativePath, content),
     ...checkCloseoutTargetTypes(relativePath, content),
     ...checkCloseGateContinuation(relativePath, content),

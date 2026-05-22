@@ -21,14 +21,14 @@ Selection rules:
 Default requirements:
 
 - Match the closest primary template first
-- Only add minimal analysis points; inline into Scope gate by default, do not output a separate template section
+- Only add minimal analysis points; inline into Scope or Solution gate by default, do not output a separate template section
 - When multiple templates match, use the primary template and only supplement missing boundaries from secondary templates
 
 Task sizing:
 
 - `tiny`: template uses only 2-3 key fields; Build gate may collapse to one line
-- `normal`: use template default minimal analysis points
-- `long-running`: beyond template fields, output Plan gate with stage-level todo/checklist, execution order, and current first work package
+- `normal`: use template default minimal analysis points, then output Solution gate before Build
+- `long-running`: beyond template fields, output Solution gate and Plan gate with stage-level todo/checklist, execution order, and current first work package
 
 Example:
 
@@ -40,4 +40,11 @@ Scope gate
 - Boundary: only change harness/core docs, not business code
 - Risk: existing consumers may have memorized old gate names
 - Verification: Markdown static check, run process check on whole repo
+
+Solution gate
+- Target behavior: process documentation uses one explicit selected-solution stage before Build.
+- Chosen solution: add a generic Solution gate and route normal/long-running task flows through it.
+- Surface changes: harness process docs and generated AGENTS template.
+- Compatibility: Patch tier stays direct; public-behavior Solution gates may pause for approval.
+- Verification impact: search old flow strings and run harness checks.
 ```

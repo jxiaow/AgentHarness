@@ -9,22 +9,23 @@
 1. 从 `templates/` 选择最接近的模板。
 2. 判断任务尺寸：`tiny`、`normal` 或 `long-running`。
 3. 输出 Scope gate。
-4. *（仅长任务）* 输出 Plan gate，创建运行态工作区。
-5. 阅读相关 `rules/` 和项目规则。
-6. 实现改动。
-7. 输出 Build gate。
-8. 跑必要的验证。
-9. 输出 Close gate。
+4. *（普通和长任务）* 输出 Solution gate。
+5. *（仅长任务）* 输出 Plan gate，创建运行态工作区。
+6. 阅读相关 `rules/` 和项目规则。
+7. 实现改动。
+8. 输出 Build gate。
+9. 跑必要的验证。
+10. 输出 Close gate。
 
-Gate 是过程记录，不是审批暂停点。没有真实阻塞时，agent 记录 gate 后继续推进。
+Gate 默认是过程记录。没有真实阻塞，且 Solution gate 没暴露尚未批准的公开行为方案时，agent 记录 gate 后继续推进。
 
 ## 任务尺寸
 
 | Size | 适用场景 | Gate 流 |
 | ---- | -------- | -------- |
 | `tiny` | 单文件文案、样式或局部配置改动 | `Scope → Close`（Build 折叠成一行或合并到 Close） |
-| `normal` | 常规 bug、新功能、重构或 UI 调整 | `Scope → Build → Close` |
-| `long-running` | 仓库结构、workspace、迁移或多阶段整改 | `Scope → Plan → Build → Close`（Plan 创建 `docs/operations/<initiative>/`） |
+| `normal` | 常规 bug、新功能、重构或 UI 调整 | `Scope → Solution → Build → Close` |
+| `long-running` | 仓库结构、workspace、迁移或多阶段整改 | `Scope → Solution → Plan → Build → Close`（Plan 创建 `docs/operations/<initiative>/`） |
 
 ### Tiny 任务快捷方式
 
@@ -52,14 +53,16 @@ Close gate
 
 agent-harness 默认按 autopilot 执行：
 
-1. 没有真实阻塞时，agent 从 Scope 一直推进到 Build 和 Close。
-2. Scope gate 必须在实现前输出。它是过程记录，不是审批暂停点。
-3. 长周期或多阶段工作必须先在 Plan gate 阶段创建阶段级 todo/checklist 和执行顺序。
-4. 完成一个工作包不等于最终收口。agent 应继续推进到下一个可执行项。
-5. "继续"、"开始"、"接着做"默认表示继续当前活动阶段。
-6. 仅当当前目标完成或出现真实阻塞时，才允许输出最终 Close gate。
-7. 持久性决策可以写入 `docs/development/changes/`，但仅在阶段收口、高风险工作完成后，或用户明确要求时。
-8. 外部 skill 或计划工具不应膨胀工作流。把它们的输出收敛到 harness gate，继续推进，除非遇到真实阻塞。
+1. 没有真实阻塞时，agent 从 Scope 和 Solution 一直推进到 Build 和 Close。
+2. Scope gate 必须在实现前输出。它界定任务范围，但不能替代 Solution gate。
+3. 普通和长任务必须在 Build 前展示 Solution gate。纯实现方案默认继续自动推进。
+4. 若 Solution gate 改变公开契约、用户流程、默认语义或已有入口，且该精确方向尚未被批准，则实现前必须暂停。
+5. 长周期或多阶段工作必须先在 Plan gate 阶段创建阶段级 todo/checklist 和执行顺序。
+6. 完成一个工作包不等于最终收口。agent 应继续推进到下一个可执行项。
+7. "继续"、"开始"、"接着做"默认表示继续当前活动阶段。
+8. 仅当当前目标完成或出现真实阻塞时，才允许输出最终 Close gate。
+9. 持久性决策可以写入 `docs/development/changes/`，但仅在阶段收口、高风险工作完成后，或用户明确要求时。
+10. 外部 skill 或计划工具不应膨胀工作流。把它们的输出收敛到 harness gate，继续推进，除非遇到真实阻塞。
 
 真实阻塞仅限于：
 
@@ -114,9 +117,10 @@ docs/operations/<initiative>/
 实现前：
 
 1. 输出 Scope gate。
-2. 创建或复用 `docs/operations/<initiative>/`，输出 Plan gate。
-3. 在运行态文档里写阶段级 todo/checklist、执行顺序、非目标和第一个工作包。
-4. 更新 board，明确当前最高优先级工作包。
+2. 输出 Solution gate。
+3. 创建或复用 `docs/operations/<initiative>/`，输出 Plan gate。
+4. 在运行态文档里写阶段级 todo/checklist、执行顺序、非目标和第一个工作包。
+5. 更新 board，明确当前最高优先级工作包。
 
 每个工作包应记录：
 
@@ -151,7 +155,7 @@ docs/operations/<initiative>/
 
 - 用 1 句话开头：目标和第一步动作。
 - task type 放在自己的一行。
-- Scope gate 用短列表。
+- Scope 和 Solution gate 用短列表。
 - Build gate 设计上就短；无偏离时一行就够。
 - 不要把 gate 当作暂停点。
 - 当大目标还有工作时，不要为单个工作包输出最终 Close gate。

@@ -41,6 +41,7 @@ Classify rules in the development process harness by "degree of automation feasi
 | Process       | Task type and gates must be on separate lines   | semi-automatable  | Scan same line for task type + gate or multiple gate markers |
 | Process       | In-progress defaults to maintaining checklist   | semi-automatable  | Scan checklist updates and closeout timing                   |
 | Process       | Long-running tasks need stage todo and order    | semi-automatable  | Scan stage plan / order fields / current stage anchor        |
+| Process       | Task flow includes Solution gate before Build   | automatable       | Scan for outdated task flow strings that skip Solution       |
 | Docs          | Operations docs not mixed into development      | semi-automatable  | Scan board/matrix/decision docs location                     |
 | Git           | Commit message format correct                   | semi-automatable  | Regex match `<type>: <message>` format                       |
 | Git           | No sensitive files committed                    | semi-automatable  | Scan `.env`, `credentials`, `*.pem`                          |

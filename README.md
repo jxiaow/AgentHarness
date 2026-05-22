@@ -31,7 +31,7 @@ AI coding agents fail in predictable ways:
 agent-harness turns those failure modes into a repeatable workflow:
 
 ```
-Scope → [Plan] → Build → Close
+Scope → Solution → [Plan] → Build → Close
 ```
 
 The point is not ceremony — it's making agent work reviewable, recoverable, and less likely to drift.
@@ -41,8 +41,8 @@ The point is not ceremony — it's making agent work reviewable, recoverable, an
 ## What You Get
 
 - **Task templates** — cover bug fixes, new features, refactors, UI adjustments, and cross-module changes.
-- **Stage gates** — force the agent to record scope, build deltas, and verification before closing out.
-- **Autopilot rules** — gates are process records, not approval pauses.
+- **Stage gates** — force the agent to record scope, selected solution, build deltas, and verification before closing out.
+- **Autopilot rules** — gates are process records by default, with explicit pauses for unapproved public behavior changes.
 - **Project adaptation layer** — captures repo facts, high-risk paths, and local rules.
 - **Operations docs** — support long-running migrations and multi-stage remediation.
 - **Lightweight process checks** — catch Markdown structure issues and known harness rule violations.
@@ -69,6 +69,13 @@ Scope gate
 - Boundary: keep API shape and routing unchanged.
 - Expected behavior: show an actionable empty state.
 - Verification: targeted unit test and smoke path.
+
+Solution gate
+- Target behavior: missing host renders the existing empty-state component.
+- Chosen solution: normalize missing host in the selector and keep the route/API unchanged.
+- Surface changes: none.
+- Compatibility: persisted host data format stays unchanged.
+- Verification impact: selector unit test plus deployment page smoke path.
 
 Build gate
 - Changed: store selector and DeploymentStatus empty-state branch.
@@ -178,13 +185,21 @@ Every task follows:
 ```
 1. Declare task type (bug / feature / refactor / UI / cross-module)
 2. Scope gate — what we're solving, the approach, boundary, risk, how to verify
-3. (Long-running only) Plan gate — operations workspace and current work package
-4. Implement
-5. Build gate — what was actually changed, any deviation from Scope
-6. Close gate — verification, unverified items, risk, final result
+3. Solution gate — target behavior, selected solution, surface change, compatibility
+4. (Long-running only) Plan gate — operations workspace and current work package
+5. Implement
+6. Build gate — what was actually changed, any deviation from Scope/Solution
+7. Close gate — verification, unverified items, risk, final result
 ```
 
-Gates are process records, not approval pauses. The agent outputs them and keeps going unless there's a real blocker (needs user authorization, would overwrite existing work, requirement changed significantly, or key input is missing).
+Gates are process records by default. The agent outputs them and keeps going unless there's a real blocker, or Solution gate exposes an unapproved public behavior decision such as a CLI/API/output/config/user-flow change.
+
+Final Close gate target types:
+
+- `single-task` — a bounded one-off task is complete and verified.
+- `staged/ongoing` — a long-running phase has no actionable remaining item.
+- `continuation` — the user said "continue/start/keep going"; inherit the active phase and continue.
+- `explicit-closeout` — the user explicitly asked to stop, summarize, or pause.
 
 ---
 

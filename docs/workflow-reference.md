@@ -9,22 +9,23 @@ For every task, the agent should:
 1. Select the closest template from `templates/`.
 2. Decide task size: `tiny`, `normal`, or `long-running`.
 3. Output Scope gate.
-4. *(Long-running only)* Output Plan gate, create operations workspace.
-5. Read relevant `rules/` and project rules.
-6. Implement the change.
-7. Output Build gate.
-8. Run necessary verification.
-9. Output Close gate.
+4. *(Normal and long-running)* Output Solution gate.
+5. *(Long-running only)* Output Plan gate, create operations workspace.
+6. Read relevant `rules/` and project rules.
+7. Implement the change.
+8. Output Build gate.
+9. Run necessary verification.
+10. Output Close gate.
 
-Gates are process records, not approval pauses. If there is no real blocker, the agent records the gate and continues.
+Gates are process records by default. If there is no real blocker and Solution gate does not expose an unapproved public behavior decision, the agent records the gate and continues.
 
 ## Task Sizes
 
 | Size | Use When | Gate Flow |
 | ---- | -------- | --------- |
 | `tiny` | Single-file wording, style, or local config changes | `Scope → Close` (Build collapses to one line or merges into Close) |
-| `normal` | Regular bugs, features, refactors, or UI changes | `Scope → Build → Close` |
-| `long-running` | Repository structure, workspace, migration, or multi-stage remediation | `Scope → Plan → Build → Close` (Plan creates `docs/operations/<initiative>/`) |
+| `normal` | Regular bugs, features, refactors, or UI changes | `Scope → Solution → Build → Close` |
+| `long-running` | Repository structure, workspace, migration, or multi-stage remediation | `Scope → Solution → Plan → Build → Close` (Plan creates `docs/operations/<initiative>/`) |
 
 ### Tiny Task Shortcut
 
@@ -52,14 +53,16 @@ Close gate
 
 agent-harness defaults to autopilot execution:
 
-1. If there is no real blocker, the agent continues from Scope through Build and Close.
-2. Scope gate must happen before implementation. It is a record, not an approval pause.
-3. Long-running or multi-stage work must create phase-level todos, a checklist, and an execution order in Plan gate before implementation.
-4. Finishing one work package is not a final closeout. The agent should continue to the next actionable item.
-5. "Continue", "start", and "keep going" mean continuing the active phase by default.
-6. A final Close gate is allowed only when the current target is complete or a real blocker appears.
-7. Durable decisions can be written to `docs/development/changes/`, but only at phase closeout, after high-risk work is complete, or when the user explicitly asks for it.
-8. External skills or planning tools should not inflate the workflow. Collapse their output into the harness gates and continue unless there is a real blocker.
+1. If there is no real blocker, the agent continues from Scope and Solution through Build and Close.
+2. Scope gate must happen before implementation. It bounds the task; it does not replace Solution gate.
+3. Normal and long-running tasks must show Solution gate before Build. Routine implementation solutions continue automatically.
+4. If Solution gate changes a public contract, user workflow, default semantics, or an existing entry point and the exact direction is not already approved, pause before implementation.
+5. Long-running or multi-stage work must create phase-level todos, a checklist, and an execution order in Plan gate before implementation.
+6. Finishing one work package is not a final closeout. The agent should continue to the next actionable item.
+7. "Continue", "start", and "keep going" mean continuing the active phase by default.
+8. A final Close gate is allowed only when the current target is complete or a real blocker appears.
+9. Durable decisions can be written to `docs/development/changes/`, but only at phase closeout, after high-risk work is complete, or when the user explicitly asks for it.
+10. External skills or planning tools should not inflate the workflow. Collapse their output into the harness gates and continue unless there is a real blocker.
 
 Real blockers are limited to:
 
@@ -114,9 +117,10 @@ Use this workflow for repository restructures, workspace changes, package rename
 Before implementation:
 
 1. Output Scope gate.
-2. Create or reuse `docs/operations/<initiative>/` and output Plan gate.
-3. Write the phase-level todo/checklist, execution order, non-goals, and first work package in the operations docs.
-4. Update the board so the current highest-priority work package is explicit.
+2. Output Solution gate.
+3. Create or reuse `docs/operations/<initiative>/` and output Plan gate.
+4. Write the phase-level todo/checklist, execution order, non-goals, and first work package in the operations docs.
+5. Update the board so the current highest-priority work package is explicit.
 
 Each work package should record:
 
@@ -151,7 +155,7 @@ Default agent output should be compact:
 
 - Start with one sentence: goal and first action.
 - Put task type on its own line.
-- Keep Scope gate to short bullets.
+- Keep Scope and Solution gates to short bullets.
 - Build gate is short by design; if no deviation, one line is enough.
 - Do not treat gates as a pause.
 - Do not output a final Close gate for a single work package if the larger goal still has work.

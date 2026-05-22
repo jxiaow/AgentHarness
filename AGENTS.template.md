@@ -8,12 +8,13 @@ Output these gates around your work:
 
 1. **Task type** on its own line (bug / feature / refactor / UI / cross-module)
 2. **Scope gate** — what we're solving, the approach, boundary, risk, how to verify
-3. *(Long-running only)* **Plan gate** — operations workspace and current work package
-4. Implement the change
-5. **Build gate** — what was actually changed, any deviation from Scope
-6. **Close gate** — verification record, unverified items, risk, final result
+3. **Solution gate** — target behavior, chosen solution, surface change, compatibility
+4. *(Long-running only)* **Plan gate** — operations workspace and current work package
+5. Implement the change
+6. **Build gate** — what was actually changed, any deviation from Scope/Solution
+7. **Close gate** — verification record, unverified items, risk, final result
 
-Gates are process records, not approval pauses. Keep going unless there's a real blocker (needs user authorization, would damage existing work, requirement changed, or key input missing).
+Gates are process records by default. Keep going unless there's a real blocker, or Solution gate exposes an unapproved public behavior decision (CLI/API/output/config/user-flow/entry-point semantics).
 
 For tiny single-file changes that match Scope exactly, Build gate can collapse to one line.
 
@@ -25,16 +26,17 @@ For tiny single-file changes that match Scope exactly, Build gate can collapse t
 ## Standard Workflow
 
 ```
-Scope → [Plan] → Build → Close
+Scope → Solution → [Plan] → Build → Close
 ```
 
 1. Declare task type
 2. Output Scope gate
-3. *(Long-running only)* Output Plan gate, create operations workspace
-4. Read relevant rules (`harness/core/rules/` + `harness/project/rules/`)
-5. Implement
-6. Output Build gate
-7. Verify; output Close gate
+3. Output Solution gate
+4. *(Long-running only)* Output Plan gate, create operations workspace
+5. Read relevant rules (`harness/core/rules/` + `harness/project/rules/`)
+6. Implement
+7. Output Build gate
+8. Verify; output Close gate
 
 ## Auto Trigger
 
@@ -51,10 +53,11 @@ Automatically enters the workflow when keywords are detected; no user prompt nee
 
 ## Autopilot
 
-- Gates are process records, not approval checkpoints; execute continuously when unblocked
+- Gates are process records by default; execute continuously when unblocked and no unapproved public behavior decision remains
 - Only pause when user authorization is needed, existing changes could be damaged, or critical input is missing
-- UI redesign / major visual overhaul: wait for user confirmation after Scope gate
-- Long-running tasks: create a todo/checklist first, then proceed in order
+- Pause after Solution gate when it changes public contracts, command/output/config semantics, user workflow, or entry-point behavior that the user has not already approved
+- UI redesign / major visual overhaul: wait for user confirmation after Scope and Solution gates
+- Long-running tasks: after Solution gate, create a todo/checklist first, then proceed in order
 - Never pause with "if you agree / shall I continue" style prompts
 
 ## Concise Output
@@ -66,7 +69,7 @@ Automatically enters the workflow when keywords are detected; no user prompt nee
 
 ## Hard Constraints
 
-- All changes, no matter how small, must go through Scope and Close gates
+- All changes, no matter how small, must go through the required gates for their tier
 - Never skip the workflow and jump straight to implementation
 - Never format intermediate progress as Close gate
 - Auto-advance by default; do not ask questions in place of actions you can complete yourself
