@@ -15,13 +15,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
 
 const HOOK_MARKER = '# agent-harness pre-commit hook';
 
 function findGitDir(startDir) {
   let dir = path.resolve(startDir);
-  while (true) {
+  for (;;) {
     const gitPath = path.join(dir, '.git');
     if (fs.existsSync(gitPath)) {
       const stat = fs.statSync(gitPath);
@@ -239,6 +238,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  main,
   parseArgs,
   installHooks,
   uninstallHooks,

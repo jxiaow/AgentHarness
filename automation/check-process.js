@@ -432,7 +432,7 @@ function checkScopeGateQuality(relativePath, content) {
   }
 
   // Extract the Scope gate section (from "Scope gate" to the next gate or heading)
-  const scopeMatch = content.match(/^\s*Scope\s+gate\s*\r?\n([\s\S]*?)(?=^\s*(?:Plan|Build|Close|Git)\s+gate|^#|\Z)/im);
+  const scopeMatch = content.match(/^\s*Scope\s+gate\s*\r?\n([\s\S]*?)(?=^\s*(?:Plan|Build|Close|Git)\s+gate|^#|$(?![\s\S]))/im);
   if (!scopeMatch) {
     return [];
   }

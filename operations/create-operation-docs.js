@@ -144,6 +144,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  main,
   normalizeInitiative,
   parseArgs,
   createOperationDocs,
