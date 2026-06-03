@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agent Harness — Process Engineering for AI Coding</title>
+  <meta name="description" content="Agent Harness is a portable process layer for AI coding agents. Make AI agents follow your engineering process." />
+  <style>
+    :root{
+      --bg:#06070b;
+      --bg2:#080a12;
+      --panel:#0f131d;
+      --panel2:#131927;
+      --panel3:#0b0f17;
+      --text:#f8fafc;
+      --muted:#9aa5b5;
+      --soft:#cbd5e1;
+      --line:rgba(255,255,255,.085);
+      --line2:rgba(255,255,255,.13);
+      --cyan:#67e8f9;
+      --blue:#60a5fa;
+      --violet:#a78bfa;
+      --green:#86efac;
+      --red:#fca5a5;
+      --yellow:#fde68a;
+      --shadow:0 40px 150px rgba(0,0,0,.44);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      line-height:1.6;
+      background:
+        radial-gradient(circle at 18% -2%,rgba(103,232,249,.18),transparent 28%),
+        radial-gradient(circle at 80% 0%,rgba(167,139,250,.18),transparent 31%),
+        radial-gradient(circle at 45% 48%,rgba(96,165,250,.08),transparent 34%),
+        linear-gradient(180deg,#06070b,#080a12 48%,#06070b);
+      overflow-x:hidden;
+    }
+    body[data-lang="zh"] .en{display:none}
+    body[data-lang="en"] .zh{display:none}
+    a{color:inherit;text-decoration:none}
+    .wrap{width:min(1180px,calc(100% - 48px));margin:0 auto}
+    .nav-shell{
+      position:fixed;
+      top:18px;
+      left:0;
+      right:0;
+      z-index:40;
+      pointer-events:none;
+    }
+    nav{
+      width:min(1120px,calc(100% - 36px));
+      margin:0 auto;
+      height:62px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 16px 0 14px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(10,13,20,.66);
+      backdrop-filter:blur(22px);
+      box-shadow:0 20px 80px rgba(0,0,0,.28);
+      pointer-events:auto;
+    }
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.045em}
+    .mark{
+      width:36px;height:36px;border-radius:13px;
+      display:grid;place-items:center;
+      color:#06101a;
+      font-weight:950;
+      background:linear-gradient(135deg,var(--cyan),var(--violet));
+      box-shadow:0 0 36px rgba(103,232,249,.28);
+    }
+    .nav-links{display:flex;align-items:center;gap:18px;color:var(--muted);font-size:14px}
+    .nav-links a:hover{color:#fff}
+    .nav-actions{display:flex;gap:10px;align-items:center}
+    .pill{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:999px;
+      height:38px;
+      padding:0 14px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:760;
+      cursor:pointer;
+    }
+    .pill.github{background:#f8fafc;color:#05070a;border-color:#f8fafc}
+    .hero{
+      min-height:100vh;
+      padding:118px 0 72px;
+      display:grid;
+      grid-template-columns:1.06fr .94fr;
+      gap:54px;
+      align-items:center;
+    }
+    .badge{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      border:1px solid rgba(103,232,249,.22);
+      background:rgba(103,232,249,.07);
+      color:#d9fbff;
+      border-radius:999px;
+      padding:8px 13px;
+      font-size:13px;
+      font-weight:700;
+    }
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 18px var(--green)}
+    h1{
+      margin:24px 0 22px;
+      font-size:clamp(54px,7vw,92px);
+      line-height:.96;
+      letter-spacing:-.072em;
+      font-weight:820;
+    }
+    body[data-lang="zh"] h1{
+      letter-spacing:-.055em;
+      line-height:1.08;
+      font-size:clamp(48px,6.1vw,78px);
+    }
+    .grad{background:linear-gradient(90deg,#fff,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero-lead{
+      max-width:720px;
+      margin:0;
+      font-size:clamp(18px,2vw,22px);
+      color:#b7c1d0;
+    }
+    .hero-subline{
+      margin:18px 0 0;
+      color:#dbeafe;
+      font-size:15px;
+    }
+    .actions{display:flex;gap:14px;flex-wrap:wrap;margin:32px 0 34px}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:14px 20px;
+      font-weight:850;
+      background:rgba(255,255,255,.045);
+    }
+    .btn.primary{background:#f8fafc;color:#05070a;border-color:#f8fafc}
+    .mini-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .mini{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.035);
+      border-radius:18px;
+      padding:15px;
+    }
+    .mini strong{display:block;font-size:14px;margin-bottom:3px}
+    .mini span{color:var(--muted);font-size:13px}
+    .hero-card{
+      border:1px solid var(--line);
+      border-radius:32px;
+      padding:28px;
+      background:linear-gradient(180deg,rgba(255,255,255,.058),rgba(255,255,255,.028));
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-card:before{
+      content:"";
+      position:absolute;
+      width:280px;height:280px;border-radius:50%;
+      background:rgba(103,232,249,.12);
+      filter:blur(38px);
+      right:-110px;top:-110px;
+    }
+    .hero-card>*{position:relative}
+    .agent-caption{text-align:center;color:#dbeafe;font-weight:850;font-size:14px;margin-bottom:12px}
+    .agent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .agent{
+      border:1px solid rgba(255,255,255,.08);
+      background:#0b0f18;
+      border-radius:15px;
+      padding:12px 8px;
+      text-align:center;
+      font-size:13px;
+      color:#dbeafe;
+      font-weight:760;
+    }
+    .agent.more{color:#c4b5fd;border-style:dashed}
+    .note{text-align:center;color:var(--muted);font-size:12px;margin:12px 0 20px}
+    .arrow{font-size:30px;color:#8fb3c4;text-align:center;margin:10px 0}
+    .harness-box{
+      border:1px solid rgba(103,232,249,.24);
+      border-radius:24px;
+      padding:22px;
+      background:
+        radial-gradient(circle at 15% 0%,rgba(103,232,249,.15),transparent 36%),
+        radial-gradient(circle at 90% 100%,rgba(167,139,250,.16),transparent 36%),
+        #101522;
+    }
+    .box-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .box-title strong{font-size:22px;letter-spacing:-.045em}
+    .box-title span{color:var(--muted);font-size:13px}
+    .process-line{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+    .process{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      background:rgba(255,255,255,.045);
+      padding:12px 8px;
+      text-align:center;
+      font-size:13px;
+      color:#eaf2ff;
+      font-weight:700;
+    }
+    .repo{
+      border:1px solid rgba(134,239,172,.22);
+      background:rgba(134,239,172,.06);
+      color:#dcfce7;
+      border-radius:20px;
+      padding:18px;
+      text-align:center;
+      font-weight:850;
+    }
+    section{padding:78px 0}
+    .section-head{max-width:850px;margin-bottom:30px}
+    .kicker{color:var(--cyan);font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.13em}
+    h2{
+      margin:8px 0 0;
+      font-size:clamp(34px,4.6vw,58px);
+      line-height:1.05;
+      letter-spacing:-.065em;
+      font-weight:820;
+    }
+    body[data-lang="zh"] h2{letter-spacing:-.045em;line-height:1.12}
+    .lead{color:#aeb8c7;font-size:18px;max-width:760px;margin:14px 0 0}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .compare{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:#0f131d;
+      padding:26px;
+      min-height:270px;
+    }
+    .compare.bad{border-color:rgba(252,165,165,.20)}
+    .compare.good{border-color:rgba(134,239,172,.23)}
+    .compare h3{margin:0 0 18px;font-size:24px;letter-spacing:-.04em}
+    .steps{display:grid;gap:10px}
+    .step{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:15px;
+      background:#0a0e16;
+      padding:13px 15px;
+      color:#dbeafe;
+      font-weight:760;
+    }
+    .bad .step:last-child{color:#fecaca}
+    .good .step:last-child{color:#bbf7d0}
+    .layers{
+      display:grid;
+      grid-template-columns:1fr .16fr 1fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    .plus{
+      display:grid;
+      place-items:center;
+      color:#c4b5fd;
+      font-size:40px;
+      font-weight:300;
+    }
+    .layer-card,.feature-card,.showcase,.philosophy,.quick{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.025));
+      padding:26px;
+      box-shadow:0 24px 100px rgba(0,0,0,.24);
+    }
+    .layer-card h3,.feature-card h3,.showcase h3{margin:0 0 12px;font-size:25px;letter-spacing:-.045em}
+    .layer-card p,.feature-card p,.showcase p{margin:0;color:var(--muted)}
+    .tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    .tag{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:999px;
+      padding:8px 11px;
+      color:#dbeafe;
+      font-size:13px;
+      font-weight:700;
+    }
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .feature-card{min-height:250px}
+    .icon{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      background:rgba(103,232,249,.08);
+      border:1px solid rgba(103,232,249,.2);
+      color:#d9fbff;
+      font-weight:900;
+      margin-bottom:18px;
+    }
+    .showcase{
+      display:grid;
+      grid-template-columns:1.02fr .98fr;
+      gap:28px;
+      align-items:center;
+      background:
+        radial-gradient(circle at 15% 0%,rgba(134,239,172,.11),transparent 32%),
+        radial-gradient(circle at 90% 20%,rgba(103,232,249,.11),transparent 35%),
+        #0f131d;
+    }
+    .project-title{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:16px;
+    }
+    .project-logo{
+      width:52px;height:52px;border-radius:17px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,#86efac,#67e8f9);
+      color:#04100b;
+      font-weight:950;
+      font-size:24px;
+    }
+    .project-title h3{font-size:34px;margin:0}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .metric{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:17px;
+      background:rgba(255,255,255,.04);
+      padding:14px;
+    }
+    .metric strong{display:block;color:#eaf2ff}
+    .metric span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+    .philosophy{
+      min-height:330px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      background:
+        radial-gradient(circle at 50% 0%,rgba(167,139,250,.15),transparent 34%),
+        linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+    }
+    .quote{
+      font-size:clamp(42px,6vw,78px);
+      line-height:1.02;
+      letter-spacing:-.07em;
+      font-weight:830;
+      max-width:960px;
+    }
+    body[data-lang="zh"] .quote{letter-spacing:-.045em}
+    .quote-small{color:#aeb8c7;font-size:19px;margin-top:18px}
+    .quick{
+      display:grid;
+      grid-template-columns:.96fr 1.04fr;
+      gap:24px;
+      align-items:center;
+    }
+    .quick-steps{display:grid;gap:12px}
+    .quick-step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.035);
+      border-radius:18px;
+      padding:15px;
+    }
+    .num{
+      width:28px;height:28px;border-radius:9px;
+      display:grid;place-items:center;
+      background:#f8fafc;color:#05070a;
+      font-weight:950;
+      flex:0 0 auto;
+    }
+    .quick-step strong{display:block}
+    .quick-step span{display:block;color:var(--muted);font-size:14px}
+    .terminal{
+      background:#05070a;
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:22px;
+      overflow:hidden;
+    }
+    .bar{height:42px;background:#0b0f18;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px;padding:0 16px}
+    .lamp{width:11px;height:11px;border-radius:50%;background:#64748b}
+    pre{
+      margin:0;
+      padding:22px;
+      overflow:auto;
+      color:#bbf7d0;
+      font-family:Consolas,ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:14px;
+      line-height:1.6;
+    }
+    footer{border-top:1px solid var(--line);padding:44px 0;color:var(--muted)}
+    .footer-inner{display:flex;justify-content:space-between;gap:20px;align-items:center}
+    @media(max-width:960px){
+      .wrap{width:min(100% - 34px,1180px)}
+      .nav-links{display:none}
+      nav{height:58px}
+      .hero,.split,.showcase,.quick{grid-template-columns:1fr}
+      .hero{padding-top:110px}
+      .mini-row,.features{grid-template-columns:1fr}
+      .layers{grid-template-columns:1fr}
+      .plus{font-size:28px}
+      .agent-grid,.process-line{grid-template-columns:repeat(2,1fr)}
+      .footer-inner{display:block}
+    }
+  </style>
+</head>
+<body data-lang="zh">
+  <div class="nav-shell">
+    <nav>
+      <a class="brand" href="#top"><span class="mark">H</span><span>Agent Harness</span></a>
+      <div class="nav-links">
+        <a href="#problem"><span class="zh">问题</span><span class="en">Problem</span></a>
+        <a href="#architecture"><span class="zh">架构</span><span class="en">Architecture</span></a>
+        <a href="#project"><span class="zh">项目案例</span><span class="en">Projects</span></a>
+        <a href="#start"><span class="zh">开始</span><span class="en">Start</span></a>
+      </div>
+      <div class="nav-actions">
+        <button class="pill" onclick="toggleLang()">中文 / EN</button>
+        <a class="pill github" href="https://github.com/jxiaow/agent-harness">GitHub</a>
+      </div>
+    </nav>
+  </div>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div>
+        <div class="badge"><span class="dot"></span><span>Process Engineering for AI Coding</span></div>
+        <h1>
+          <span class="zh">让 AI Agent<br><span class="grad">遵循你的</span><br>工程流程</span>
+          <span class="en">Make AI Agents<br><span class="grad">Follow Your</span><br>Engineering Process</span>
+        </h1>
+        <p class="hero-lead">
+          <span class="zh">不要只写更好的 Prompt。开始构建可复用的工程流程。Agent Harness 让 Claude Code、Codex、Cursor 等 AI 编程工具，在不同项目中遵循统一的开发方式。</span>
+          <span class="en">Stop writing better prompts. Start building better processes. Agent Harness makes Claude Code, Codex, Cursor and other AI coding agents follow a repeatable engineering workflow.</span>
+        </p>
+        <p class="hero-subline">
+          <span class="zh">它不是另一个 Agent，而是包裹在 Agent 外面的工程流程层。</span>
+          <span class="en">Not another agent. A process layer around the agents you already use.</span>
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="#start"><span class="zh">快速开始</span><span class="en">Get Started</span> →</a>
+          <a class="btn" href="#problem"><span class="zh">为什么需要它</span><span class="en">Why it matters</span></a>
+        </div>
+        <div class="mini-row">
+          <div class="mini"><strong><span class="zh">无需服务器</span><span class="en">No server</span></strong><span><span class="zh">只是一组仓库文件</span><span class="en">Just files in your repo</span></span></div>
+          <div class="mini"><strong><span class="zh">无需 SDK</span><span class="en">No SDK</span></strong><span><span class="zh">Agent 能读文档即可</span><span class="en">Works with doc-reading agents</span></span></div>
+          <div class="mini"><strong><span class="zh">无厂商绑定</span><span class="en">No lock-in</span></strong><span><span class="zh">使用你已有的工具</span><span class="en">Bring your own agent</span></span></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="agent-caption">
+          <span class="zh">使用你熟悉的 AI 编程工具</span>
+          <span class="en">Bring your own coding agent</span>
+        </div>
+        <div class="agent-grid">
+          <div class="agent">Claude Code</div>
+          <div class="agent">OpenAI Codex</div>
+          <div class="agent">Cursor</div>
+          <div class="agent">Kiro</div>
+          <div class="agent">Gemini CLI</div>
+          <div class="agent more">+ More</div>
+        </div>
+        <div class="note">
+          <span class="zh">只要 Agent 能读取项目说明，就可以接入这套流程。</span>
+          <span class="en">Works with any agent that can read project instructions.</span>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="harness-box">
+          <div class="box-title">
+            <strong>Agent Harness</strong>
+            <span><span class="zh">工程流程层</span><span class="en">Process layer</span></span>
+          </div>
+          <div class="process-line">
+            <div class="process">Scope</div>
+            <div class="process">Rules</div>
+            <div class="process">Build</div>
+            <div class="process">Verify</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="repo"><span class="zh">你的项目仓库</span><span class="en">Your Repository</span></div>
+      </div>
+    </section>
+
+    <section id="problem" class="wrap">
+      <div class="section-head">
+        <div class="kicker"><span class="zh">问题</span><span class="en">The Problem</span></div>
+        <h2>
+          <span class="zh">AI 不是不会写代码，而是不知道你的工程流程。</span>
+          <span class="en">AI agents don't fail because they can't code.</span>
+        </h2>
+        <p class="lead">
+          <span class="zh">很多 AI 编程失败不是能力问题，而是流程缺失：需求没澄清、边界没确认、架构规则没读取、验证结果说不清。</span>
+          <span class="en">They fail because they don't know your engineering process: unclear scope, hidden assumptions, skipped project rules and vague verification.</span>
+        </p>
+      </div>
+      <div class="split">
+        <div class="compare bad">
+          <h3><span class="zh">没有 Harness</span><span class="en">Without Harness</span></h3>
+          <div class="steps">
+            <div class="step">AI Agent</div>
+            <div class="step"><span class="zh">直接修改代码</span><span class="en">Directly changes code</span></div>
+            <div class="step"><span class="zh">依赖隐藏假设</span><span class="en">Hidden assumptions</span></div>
+            <div class="step"><span class="zh">结果不可预测</span><span class="en">Unpredictable result</span></div>
+          </div>
+        </div>
+        <div class="compare good">
+          <h3><span class="zh">使用 Agent Harness</span><span class="en">With Agent Harness</span></h3>
+          <div class="steps">
+            <div class="step">AI Agent</div>
+            <div class="step"><span class="zh">进入工程流程层</span><span class="en">Goes through process layer</span></div>
+            <div class="step"><span class="zh">Scope → Rules → Build → Verify</span><span class="en">Scope → Rules → Build → Verify</span></div>
+            <div class="step"><span class="zh">结果可审查</span><span class="en">Reviewable result</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="wrap">
+      <div class="section-head">
+        <div class="kicker"><span class="zh">架构</span><span class="en">Architecture</span></div>
+        <h2>
+          <span class="zh">通用流程可复用，项目知识单独沉淀。</span>
+          <span class="en">Reusable process. Project-specific knowledge.</span>
+        </h2>
+        <p class="lead">
+          <span class="zh">Agent Harness 将通用流程和项目事实分开：core 负责流程，project 负责当前仓库的规则、约束和上下文。</span>
+          <span class="en">Agent Harness separates the reusable process layer from local repository knowledge: core defines the workflow, project stores your rules and constraints.</span>
+        </p>
+      </div>
+      <div class="layers">
+        <div class="layer-card">
+          <h3>harness/core</h3>
+          <p><span class="zh">通用流程层，可作为 submodule 升级。</span><span class="en">Generic process layer, upgradeable as a submodule.</span></p>
+          <div class="tags">
+            <span class="tag">Workflow</span>
+            <span class="tag">Templates</span>
+            <span class="tag">Verification</span>
+            <span class="tag">Operations</span>
+          </div>
+        </div>
+        <div class="plus">+</div>
+        <div class="layer-card">
+          <h3>harness/project</h3>
+          <p><span class="zh">当前项目的工程知识，保留在你的仓库里。</span><span class="en">Local engineering knowledge that stays inside your repository.</span></p>
+          <div class="tags">
+            <span class="tag">Rules</span>
+            <span class="tag">Architecture</span>
+            <span class="tag">Constraints</span>
+            <span class="tag">Risk Paths</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head">
+        <div class="kicker"><span class="zh">能力</span><span class="en">Capabilities</span></div>
+        <h2>
+          <span class="zh">少而清晰的三层能力。</span>
+          <span class="en">Three clear layers of capability.</span>
+        </h2>
+      </div>
+      <div class="features">
+        <div class="feature-card">
+          <div class="icon">01</div>
+          <h3><span class="zh">工程流程</span><span class="en">Engineering Flow</span></h3>
+          <p><span class="zh">让 Agent 在修改代码前明确范围、方案、风险和验证方式。</span><span class="en">Make agents clarify scope, solution, risk and verification before editing code.</span></p>
+          <div class="tags"><span class="tag">Scope</span><span class="tag">Solution</span><span class="tag">Build</span><span class="tag">Verify</span></div>
+        </div>
+        <div class="feature-card">
+          <div class="icon">02</div>
+          <h3><span class="zh">项目知识</span><span class="en">Project Knowledge</span></h3>
+          <p><span class="zh">沉淀模块边界、架构约束、高风险路径和团队规则。</span><span class="en">Capture module boundaries, architecture constraints, risk paths and team conventions.</span></p>
+          <div class="tags"><span class="tag">Rules</span><span class="tag">Constraints</span><span class="tag">Architecture</span></div>
+        </div>
+        <div class="feature-card">
+          <div class="icon">03</div>
+          <h3><span class="zh">可复用流程</span><span class="en">Reusable Process</span></h3>
+          <p><span class="zh">将 Bugfix、需求、重构、长任务等流程模板化，跨项目复用。</span><span class="en">Turn bugfixes, features, refactors and long operations into reusable process templates.</span></p>
+          <div class="tags"><span class="tag">Templates</span><span class="tag">Workflows</span><span class="tag">Operations</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="project" class="wrap">
+      <div class="section-head">
+        <div class="kicker"><span class="zh">真实项目</span><span class="en">Real Project</span></div>
+        <h2>
+          <span class="zh">已用于真实工具链项目。</span>
+          <span class="en">Used in a real toolchain project.</span>
+        </h2>
+      </div>
+      <div class="showcase">
+        <div>
+          <div class="project-title">
+            <div class="project-logo">F</div>
+            <h3>Forja</h3>
+          </div>
+          <p>
+            <span class="zh">Forja 是一个 C++ 项目构建工具链，包含 VSCode 扩展、独立 CLI 和 AI Skill，支持 Qt/qmake 项目、SDK 项目、Windows MSVC 与 Linux 平台。</span>
+            <span class="en">Forja is a C++ project build toolchain with a VSCode extension, standalone CLI and AI Skill. It supports Qt/qmake projects, SDK projects, Windows MSVC and Linux.</span>
+          </p>
+          <div class="actions" style="margin-bottom:0">
+            <a class="btn primary" href="https://github.com/jxiaow/Forja"><span class="zh">查看 Forja</span><span class="en">View Forja</span> →</a>
+          </div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><strong>VSCode Extension</strong><span><span class="zh">图形化构建、调试、同步</span><span class="en">GUI build, debug and sync</span></span></div>
+          <div class="metric"><strong>CLI</strong><span><span class="zh">本地构建和文件同步</span><span class="en">Local build and file sync</span></span></div>
+          <div class="metric"><strong>AI Skill</strong><span><span class="zh">为 AI 助手提供构建能力</span><span class="en">Build capability for AI assistants</span></span></div>
+          <div class="metric"><strong>Cross-platform</strong><span>Windows MSVC · Linux GCC</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="philosophy">
+        <div>
+          <div class="quote">
+            <span class="zh">Prompt 是临时的。<br><span class="grad">流程可以规模化。</span></span>
+            <span class="en">Prompts are temporary.<br><span class="grad">Processes scale.</span></span>
+          </div>
+          <div class="quote-small">
+            <span class="zh">一个 Prompt 解决一个任务，一套流程解决上千个任务。</span>
+            <span class="en">A prompt solves one task. A process solves thousands.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="start" class="wrap">
+      <div class="section-head">
+        <div class="kicker"><span class="zh">快速开始</span><span class="en">Quick Start</span></div>
+        <h2>
+          <span class="zh">三步接入你的仓库。</span>
+          <span class="en">Add it to your repository in three steps.</span>
+        </h2>
+      </div>
+      <div class="quick">
+        <div class="quick-steps">
+          <div class="quick-step"><div class="num">1</div><div><strong><span class="zh">添加 Harness</span><span class="en">Add Harness</span></strong><span><span class="zh">以 submodule 方式添加通用流程层。</span><span class="en">Add the reusable process layer as a submodule.</span></span></div></div>
+          <div class="quick-step"><div class="num">2</div><div><strong><span class="zh">生成项目画像</span><span class="en">Generate Project Profile</span></strong><span><span class="zh">让 AI 读取 ONBOARD.md 并生成项目规则。</span><span class="en">Ask your agent to read ONBOARD.md and generate project rules.</span></span></div></div>
+          <div class="quick-step"><div class="num">3</div><div><strong><span class="zh">按流程开发</span><span class="en">Start Building</span></strong><span><span class="zh">让 Agent 按 Scope、Rules、Build、Verify 交付。</span><span class="en">Make the agent deliver through Scope, Rules, Build and Verify.</span></span></div></div>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span></div>
+<pre>git submodule add https://github.com/jxiaow/agent-harness.git harness/core
+mkdir -p harness/project/rules
+
+# Then ask your AI coding agent:
+Read harness/core/ONBOARD.md
+Generate the project profile and rules.</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div>
+        <span class="zh">Agent Harness · 面向 AI 编程的 Process Engineering。</span>
+        <span class="en">Agent Harness · Process Engineering for AI Coding.</span>
+      </div>
+      <div>GitHub · Docs · AGENTS.md</div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleLang(){
+      const body = document.body;
+      const next = body.getAttribute("data-lang") === "zh" ? "en" : "zh";
+      body.setAttribute("data-lang", next);
+      document.documentElement.lang = next === "zh" ? "zh-CN" : "en";
+    }
+  </script>
+</body>
+</html>
